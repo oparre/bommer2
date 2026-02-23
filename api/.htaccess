@@ -1,0 +1,4 @@
+# Allow access to all files in API directory
+<FilesMatch ".*">
+    Require all granted
+</FilesMatch>

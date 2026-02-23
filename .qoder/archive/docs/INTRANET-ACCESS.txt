@@ -1,0 +1,132 @@
+================================================================================
+BOMMER APP - INTRANET ACCESS CONFIGURATION
+================================================================================
+
+SERVER INFORMATION:
+- Host Machine: DESKTOP-9P0HD52
+- Current IP Address: 192.168.1.17
+- Network: 192.168.1.0/24 (Wi-Fi - asusnuovo)
+- Network Profile: Private
+- Apache Port: 80
+
+================================================================================
+ACCESS METHODS
+================================================================================
+
+FROM THIS MACHINE (localhost):
+-------------------------------
+✓ http://bommer.local
+✓ http://bommer.localhost
+✓ http://192.168.1.17
+✓ http://DESKTOP-9P0HD52
+
+FROM OTHER MACHINES ON THE INTRANET (192.168.1.x):
+----------------------------------------------------
+✓ http://192.168.1.17
+✓ http://DESKTOP-9P0HD52
+
+Note: To use the hostname method (http://DESKTOP-9P0HD52), other machines need
+to either:
+  1. Have DESKTOP-9P0HD52 in their DNS/hosts file, OR
+  2. Your network has DNS configured to resolve the hostname
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+QUICK SETUP (RECOMMENDED):
+---------------------------
+1. Right-click PowerShell and select "Run as Administrator"
+2. Navigate to: cd C:\wamp64\www\bommer
+3. Run: .\enable-intranet-access.ps1
+4. The script will:
+   - Create a firewall rule for port 80
+   - Restart Apache service
+   - Test connectivity
+
+MANUAL SETUP:
+--------------
+1. RESTART APACHE:
+   - Open WAMP menu (system tray icon)
+   - Click: Apache → Service administration → Restart Service
+   - Or restart all WAMP services
+
+2. CREATE FIREWALL RULE (as Administrator in PowerShell):
+   New-NetFirewallRule -DisplayName "Bommer Apache Intranet Access" `
+       -Direction Inbound `
+       -Protocol TCP `
+       -LocalPort 80 `
+       -Action Allow `
+       -Profile Private,Domain `
+       -Program "C:\wamp64\bin\apache\apache2.4.59\bin\httpd.exe"
+
+3. TEST LOCAL ACCESS:
+   Open browser on this machine and try:
+   - http://192.168.31.183
+   - http://DESKTOP-9P0HD52
+
+4. TEST INTRANET ACCESS:
+   From another computer on the same network (192.168.31.x):
+   - http://192.168.31.183
+   - http://DESKTOP-9P0HD52 (if DNS is configured)
+
+================================================================================
+SECURITY CONFIGURATION
+================================================================================
+
+Current access is restricted to:
+✓ localhost (127.0.0.1)
+✓ IPv6 localhost (::1)
+✓ Your local subnet (192.168.1.0/24)
+
+To allow OTHER subnets (e.g., 10.0.0.0/8):
+Edit: C:\wamp64\bin\apache\apache2.4.59\conf\extra\httpd-vhosts.conf
+Find the Bommer virtual host and add to "Require ip" line:
+   Require ip 127.0.0.1 ::1 192.168.31.0/24 10.0.0.0/8
+
+To allow ALL intranet access:
+   Require ip 127.0.0.1 ::1 192.168.0.0/16 10.0.0.0/8 172.16.0.0/12
+
+To allow INTERNET access (NOT RECOMMENDED for dev):
+   Require all granted
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Problem: "Connection timed out" or "Can't reach" from other machines
+Solution:
+1. Check Windows Firewall is allowing Apache
+2. Verify WAMP is running (green icon)
+3. Ping the server from other machine: ping 192.168.31.183
+4. Check if Apache is listening: netstat -an | findstr :80
+
+Problem: "403 Forbidden"
+Solution:
+1. Check the "Require ip" line includes the client's IP subnet
+2. Verify the client is on the 192.168.31.x network
+
+Problem: Works with IP but not hostname
+Solution:
+1. The hostname needs DNS resolution or hosts file entry on client machines
+2. Simpler to use IP address for intranet access
+
+Problem: Connection refused
+Solution:
+1. Verify Apache is running
+2. Check if another service is using port 80
+3. Try accessing from localhost first
+
+================================================================================
+CONFIGURATION FILES MODIFIED
+================================================================================
+
+File: C:\wamp64\bin\apache\apache2.4.59\conf\extra\httpd-vhosts.conf
+
+Changes made:
+- Added ServerAlias for IP: 192.168.1.17 (updated automatically when IP changes)
+- Added ServerAlias for hostname: DESKTOP-9P0HD52
+- Changed access control to: Require ip 127.0.0.1 ::1 192.168.1.0/24
+- Moved Bommer VirtualHost to FIRST position (for default IP-based access)
+
+================================================================================

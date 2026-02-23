@@ -1,0 +1,1110 @@
+/**
+ * Authentication System Custom Styles
+ * Complements Clarity Design System with Noto Sans SC font
+ * WCAG 2.2 Compliant - High Contrast Override
+ */
+
+/* ========================================
+   CRITICAL: Clarity Design Override
+   These rules must override Clarity's defaults
+   ======================================== */
+
+/* Force override Clarity's header-6 dark theme */
+.header.header-6,
+.header-6 {
+    background: #1b2129 !important;
+    color: #ffffff !important;
+}
+
+.header.header-6 .branding,
+.header-6 .branding {
+    max-width: none !important;
+}
+
+.header.header-6 .branding .title,
+.header-6 .branding .title,
+.header.header-6 .branding a,
+.header-6 .branding a {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+.header.header-6 .header-nav .nav-link,
+.header-6 .header-nav .nav-link {
+    color: #ffffff !important;
+    font-weight: 500 !important;
+}
+
+.header.header-6 .header-nav .nav-link:hover,
+.header-6 .header-nav .nav-link:hover {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    font-weight: 600 !important;
+}
+
+.header.header-6 .header-actions,
+.header-6 .header-actions {
+    color: #ffffff !important;
+}
+
+.header.header-6 clr-icon,
+.header-6 clr-icon {
+    --color: currentColor;
+    width: 16px;
+    height: 16px;
+}
+
+.header-actions clr-icon {
+    --color: #ffffff;
+}
+
+/* Override Clarity's button colors */
+.btn.btn-primary {
+    background: #0095d3 !important;
+    border-color: #0095d3 !important;
+    color: #ffffff !important;
+}
+
+.btn.btn-primary:hover {
+    background: #00a3e6 !important;
+    border-color: #00a3e6 !important;
+    color: #ffffff !important;
+}
+
+.btn.btn-primary:active {
+    background: #0082b8 !important;
+    border-color: #0082b8 !important;
+    color: #ffffff !important;
+}
+
+.btn.btn-info {
+    background: #5c5cff !important;
+    border-color: #5c5cff !important;
+    color: #ffffff !important;
+}
+
+.btn.btn-info:hover {
+    background: #7373ff !important;
+    border-color: #7373ff !important;
+    color: #ffffff !important;
+}
+
+.btn.btn-info:active {
+    background: #4545e6 !important;
+    border-color: #4545e6 !important;
+    color: #ffffff !important;
+}
+
+.btn.btn-success {
+    background: #3c8500 !important;
+    border-color: #3c8500 !important;
+    color: #ffffff !important;
+}
+
+.btn.btn-success:hover {
+    background: #4a9e00 !important;
+    border-color: #4a9e00 !important;
+    color: #ffffff !important;
+}
+
+.btn.btn-success:active {
+    background: #2e6b00 !important;
+    border-color: #2e6b00 !important;
+    color: #ffffff !important;
+}
+
+.btn.btn-warning {
+    background: #c25400 !important;
+    border-color: #c25400 !important;
+    color: #ffffff !important;
+}
+
+.btn.btn-warning:hover {
+    background: #d66000 !important;
+    border-color: #d66000 !important;
+    color: #ffffff !important;
+}
+
+.btn.btn-warning:active {
+    background: #a84700 !important;
+    border-color: #a84700 !important;
+    color: #ffffff !important;
+}
+
+.btn.btn-link {
+    color: #ffffff !important;
+    background: transparent !important;
+}
+
+.btn.btn-link:hover {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Override Clarity's table styles */
+.table th,
+table th {
+    color: #ffffff !important;
+    background: #0f1216 !important;
+}
+
+.table td,
+table td {
+    color: #ffffff !important;
+}
+
+/* Override Clarity's badge styles */
+.badge {
+    font-weight: 600 !important;
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge.badge-blue,
+.badge-blue {
+    background: #0095d3 !important;
+    color: #ffffff !important;
+}
+
+.badge.badge-light-blue,
+.badge-light-blue {
+    background: #00a3e6 !important;
+    color: #ffffff !important;
+}
+
+.badge.badge-success,
+.badge-success {
+    background: #3c8500 !important;
+    color: #ffffff !important;
+}
+
+.badge.badge-danger,
+.badge-danger {
+    background: #c92100 !important;
+    color: #ffffff !important;
+}
+
+.badge.badge-warning,
+.badge-warning {
+    background: #c25400 !important;
+    color: #000000 !important;
+    font-weight: 700 !important;
+}
+
+/* Override Clarity modal styles */
+.modal-content {
+    background: #1b2129 !important;
+    color: #ffffff !important;
+}
+
+.modal-title {
+    color: #ffffff !important;
+}
+
+.modal-header .close {
+    color: #ffffff !important;
+}
+
+/* Override Clarity form styles */
+.clr-control-label {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+.clr-subtext {
+    color: #e0e8ef !important;
+}
+
+.clr-input,
+.clr-select {
+    color: #ffffff !important;
+    background: #0f1216 !important;
+    border-color: #3d4a58 !important;
+}
+
+/* Override Clarity's p6 style */
+.p6,
+p.p6,
+span.p6 {
+    color: #ffffff !important;
+    font-weight: 500 !important;
+}
+
+/* Font Import - Using Noto Sans SC from local assets */
+@font-face {
+    font-family: 'Noto Sans SC';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: local('Noto Sans SC Light'),
+         url('/public/fonts/noto-sans-sc/NotoSansSC-Light.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Noto Sans SC';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local('Noto Sans SC Regular'),
+         url('/public/fonts/noto-sans-sc/NotoSansSC-Regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Noto Sans SC';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: local('Noto Sans SC Medium'),
+         url('/public/fonts/noto-sans-sc/NotoSansSC-Medium.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Noto Sans SC';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: local('Noto Sans SC SemiBold'),
+         url('/public/fonts/noto-sans-sc/NotoSansSC-SemiBold.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Noto Sans SC';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: local('Noto Sans SC Bold'),
+         url('/public/fonts/noto-sans-sc/NotoSansSC-Bold.woff2') format('woff2');
+}
+
+/* Apply Noto Sans SC globally - High specificity */
+body,
+body *,
+.clr-form,
+.clr-form *,
+.clr-input,
+.clr-select,
+.clr-control-label,
+.btn,
+.alert,
+.modal,
+.modal *,
+.table,
+.table *,
+h1, h2, h3, h4, h5, h6,
+p, span, div,
+.header,
+.header * {
+    font-family: "Noto Sans SC", sans-serif !important;
+}
+
+/* Login Page Specific Styles */
+body.login-page {
+    background: #1a1f2e !important;
+    color: #ffffff !important;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+body.login-page .main-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: #1a1f2e !important;
+}
+
+body.login-page .content-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+body.login-page .content-area {
+    width: 100%;
+    max-width: 480px;
+    padding: 0;
+    background: transparent !important;
+}
+
+.login-card {
+    background: #1b2129;
+    border-radius: 8px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    padding: 40px;
+    border: 1px solid #3d4a58;
+}
+
+.login-card-title {
+    color: #ffffff !important;
+    font-size: 28px;
+    font-weight: 600 !important;
+    margin: 0 0 8px 0 !important;
+    text-align: center;
+}
+
+.login-card-subtitle {
+    color: #c5d1d9;
+    font-size: 14px;
+    margin: 0 0 32px 0;
+    text-align: center;
+}
+
+.login-card .clr-form-control {
+    margin-bottom: 20px;
+}
+
+.login-card .btn-block {
+    width: 100%;
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.login-card-footer {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #3d4a58;
+}
+
+.login-card-footer .login-footer-text {
+    color: #c5d1d9;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 0;
+}
+
+.login-card-footer .login-footer-text clr-icon {
+    --color: #4db8e8;
+}
+
+/* Legacy Login Page Styles (for backward compatibility) */
+.login-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1f2e 0%, #313541 100%);
+    padding: 20px;
+}
+
+.login-container {
+    background: #1b2129;
+    border-radius: 8px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    padding: 40px;
+    width: 100%;
+    max-width: 420px;
+    border: 1px solid #3d4a58;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.login-title {
+    color: #ffffff;
+    font-size: 28px;
+    font-weight: 500;
+    margin: 0 0 8px 0;
+}
+
+.login-subtitle {
+    color: #c5d1d9;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Form Styles */
+.clr-form-control {
+    margin-bottom: 24px;
+}
+
+.clr-control-label {
+    color: #ffffff;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.clr-control-label.required::after {
+    content: ' *';
+    color: #ff5630;
+}
+
+.clr-input {
+    background: #0f1216;
+    border: 2px solid #3d4a58;
+    color: #ffffff;
+    border-radius: 4px;
+    padding: 8px 12px;
+    width: 100%;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.clr-input:focus {
+    border-color: #4db8e8;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(77, 184, 232, 0.25);
+}
+
+.clr-input::placeholder {
+    color: #8a9ba8;
+    opacity: 1;
+}
+
+.clr-subtext {
+    color: #e0e8ef;
+    font-size: 12px;
+    display: block;
+    margin-top: 4px;
+}
+
+/* Checkbox Styles */
+.clr-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    margin: 16px 0;
+}
+
+.clr-checkbox {
+    margin-right: 8px;
+}
+
+.clr-checkbox-wrapper .clr-control-label {
+    margin: 0;
+    color: #ffffff;
+    font-weight: 500;
+}
+
+/* Button Styles */
+.login-actions {
+    margin-top: 32px;
+}
+
+.btn-block {
+    width: 100%;
+}
+
+.btn-primary {
+    background: #0095d3;
+    border-color: #0095d3;
+    color: #ffffff;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-width: 2px;
+}
+
+.btn-primary:hover {
+    background: #00a3e6;
+    border-color: #00a3e6;
+    color: #ffffff;
+}
+
+.btn-primary:active {
+    background: #0082b8;
+    border-color: #0082b8;
+    color: #ffffff;
+}
+
+.btn-primary:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(77, 184, 232, 0.4);
+}
+
+/* Alert Styles */
+.alert {
+    margin-bottom: 24px;
+    padding: 12px;
+    border-radius: 4px;
+    border-left: 4px solid;
+}
+
+.alert-error {
+    background: rgba(255, 86, 48, 0.15);
+    border-left-color: #ff5630;
+    color: #ffffff;
+}
+
+.alert-success {
+    background: rgba(98, 208, 119, 0.15);
+    border-left-color: #62d077;
+    color: #ffffff;
+}
+
+.alert-warning {
+    background: rgba(255, 197, 61, 0.15);
+    border-left-color: #ffc53d;
+    color: #ffffff;
+}
+
+.alert-info {
+    background: rgba(77, 184, 232, 0.15);
+    border-left-color: #4db8e8;
+    color: #ffffff;
+}
+
+.alert-items {
+    display: flex;
+    align-items: center;
+}
+
+.alert-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.alert-icon-wrapper {
+    margin-right: 12px;
+}
+
+.alert-text {
+    flex: 1;
+}
+
+/* Footer */
+.login-footer {
+    margin-top: 24px;
+    text-align: center;
+}
+
+.login-footer-text {
+    color: #c5d1d9;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.login-footer-text clr-icon {
+    --color: #4db8e8;
+}
+
+/* Admin Page Styles - Enhanced Specificity */
+body.admin-page {
+    background: #1a1f2e !important;
+    color: #ffffff !important;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: #1a1f2e !important;
+}
+
+.header {
+    background: #1b2129;
+    border-bottom: 1px solid #3d4a58;
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.branding .title {
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.header-nav {
+    display: flex;
+    gap: 16px;
+}
+
+.header-nav .nav-link {
+    color: #ffffff;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+    font-weight: 500;
+}
+
+.header-nav .nav-link:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.header-nav .nav-link:focus {
+    outline: none;
+    border-color: #4db8e8;
+    box-shadow: 0 0 0 3px rgba(77, 184, 232, 0.25);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-actions .p6 {
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+}
+
+.content-container {
+    flex: 1;
+    overflow: auto;
+}
+
+.content-area {
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+    background: #1a1f2e !important;
+}
+
+.content-area h1 {
+    color: #ffffff !important;
+    margin: 0 0 24px 0;
+    font-size: 24px;
+    font-weight: 600 !important;
+}
+
+/* Table Styles */
+.table {
+    width: 100%;
+    margin-top: 24px;
+    background: #1b2129;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #3d4a58;
+    font-size: 13px;
+}
+
+.table thead {
+    background: #0f1216;
+}
+
+.table th {
+    color: #ffffff;
+    font-weight: 600;
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #3d4a58;
+}
+
+.table td {
+    color: #ffffff;
+    padding: 12px;
+    border-bottom: 1px solid #3d4a58;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.table tbody tr:focus-within {
+    outline: 2px solid #4db8e8;
+    outline-offset: -2px;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.open {
+    display: flex;
+}
+
+.modal-dialog {
+    width: 100%;
+    max-width: 500px;
+    margin: 20px;
+}
+
+.modal-content {
+    background: #1b2129;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    border: 1px solid #3d4a58;
+}
+
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #3d4a58;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.modal-title {
+    color: #ffffff;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.modal-header .close {
+    background: transparent;
+    border: 2px solid transparent;
+    color: #c5d1d9;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.modal-header .close:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.modal-header .close:focus {
+    outline: none;
+    border-color: #4db8e8;
+    box-shadow: 0 0 0 3px rgba(77, 184, 232, 0.25);
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #3d4a58;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Select Styles */
+.clr-select-wrapper {
+    position: relative;
+}
+
+.clr-select {
+    background: #0f1216;
+    border: 2px solid #3d4a58;
+    color: #ffffff;
+    border-radius: 4px;
+    padding: 8px 32px 8px 12px;
+    width: 100%;
+    font-size: 14px;
+    appearance: none;
+}
+
+.clr-select:focus {
+    border-color: #4db8e8;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(77, 184, 232, 0.25);
+}
+
+/* Button Variants */
+.btn-outline {
+    background: transparent;
+    border: 2px solid #6b7a8a;
+    color: #ffffff;
+    border-radius: 4px;
+    padding: 8px 16px;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.btn-outline:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    border-color: #8a9ba8;
+    font-weight: 600;
+}
+
+.btn-outline:focus {
+    outline: none;
+    border-color: #4db8e8;
+    box-shadow: 0 0 0 3px rgba(77, 184, 232, 0.25);
+}
+
+.btn-link {
+    background: transparent;
+    border: 2px solid transparent;
+    color: #ffffff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.btn-link:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.15);
+    font-weight: 600;
+}
+
+.btn-link:focus {
+    outline: none;
+    border-color: #4db8e8;
+    background: rgba(77, 184, 232, 0.2);
+    color: #ffffff;
+}
+
+.btn-sm {
+    padding: 6px 8px !important;
+    font-size: 10px !important;
+    min-width: 90px;
+    font-weight: 600 !important;
+    line-height: 1.4;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+}
+
+/* Inline SVG icons in buttons */
+.btn-icon,
+.btn svg.btn-icon {
+    width: 14px !important;
+    height: 14px !important;
+    min-width: 14px !important;
+    min-height: 14px !important;
+    display: inline-block !important;
+    fill: currentColor !important;
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+
+/* Button-specific icon colors */
+.btn-primary .btn-icon,
+.btn-info .btn-icon,
+.btn-success .btn-icon,
+.btn-warning .btn-icon {
+    fill: #ffffff !important;
+}
+
+.btn .btn-icon {
+    fill: currentColor !important;
+}
+
+.btn-sm clr-icon {
+    --color: currentColor !important;
+    width: 14px !important;
+    height: 14px !important;
+    min-width: 14px !important;
+    min-height: 14px !important;
+    display: inline-block !important;
+    flex-shrink: 0;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Ensure icons are visible and properly sized */
+clr-icon {
+    display: inline-block !important;
+    vertical-align: middle;
+    fill: currentColor !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+clr-icon svg {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    fill: currentColor !important;
+    opacity: 1 !important;
+}
+
+.btn clr-icon {
+    --color: currentColor !important;
+    display: inline-block !important;
+    fill: currentColor !important;
+    opacity: 1 !important;
+    width: 14px !important;
+    height: 14px !important;
+    vertical-align: middle;
+}
+
+/* Button-specific icon colors */
+.btn-primary clr-icon,
+.btn-info clr-icon,
+.btn-success clr-icon,
+.btn-warning clr-icon {
+    --color: #ffffff !important;
+    color: #ffffff !important;
+}
+
+.btn-primary clr-icon svg,
+.btn-info clr-icon svg,
+.btn-success clr-icon svg,
+.btn-warning clr-icon svg {
+    fill: #ffffff !important;
+}
+
+/* Ensure clr-icon elements also work (legacy) */
+clr-icon {
+    display: inline-block !important;
+    width: 16px !important;
+    height: 16px !important;
+    fill: currentColor !important;
+}
+
+clr-icon svg {
+    fill: currentColor !important;
+}
+
+/* Alert icon sizing */
+.alert-icon-wrapper clr-icon,
+.alert clr-icon {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+/* Action Buttons Layout */
+.action-buttons {
+    white-space: nowrap;
+    min-width: 360px;
+    padding: 8px 4px !important;
+}
+
+.action-buttons .btn {
+    margin: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.action-buttons form {
+    margin: 0;
+    display: inline-block;
+}
+
+/* Error State */
+.clr-form-control.clr-error .clr-input {
+    border-color: #ff5630;
+}
+
+.clr-form-control.clr-error .clr-subtext {
+    color: #ff5630;
+}
+
+/* Keyboard Navigation Focus Styles */
+*:focus-visible {
+    outline: 3px solid #4db8e8;
+    outline-offset: 2px;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid #4db8e8;
+    outline-offset: 2px;
+}
+
+/* Screen Reader Only Text */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Skip to Main Content Link (for keyboard users) */
+.skip-to-main {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #4db8e8;
+    color: #000000;
+    padding: 8px 16px;
+    text-decoration: none;
+    z-index: 9999;
+    font-weight: 600;
+}
+
+.skip-to-main:focus {
+    top: 0;
+}
+
+/* Enhanced Focus Indicators for Better Visibility */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus,
+a:focus {
+    outline: 3px solid #4db8e8;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(77, 184, 232, 0.3);
+}
+
+/* Ensure modal backdrop doesn't interfere with focus */
+.modal {
+    isolation: isolate;
+}
+
+.modal.open {
+    pointer-events: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .login-container {
+        padding: 24px;
+    }
+    
+    .content-area {
+        padding: 16px;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+    
+    .table th,
+    .table td {
+        padding: 8px;
+    }
+}

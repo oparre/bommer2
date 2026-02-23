@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decimal Precision Test - Bommer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #1b2a32;
+            color: #fff;
+        }
+        h1 {
+            color: #4db8e8;
+        }
+        .test-section {
+            background: #243944;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .test-case {
+            margin: 10px 0;
+            padding: 10px;
+            background: #2d4552;
+            border-left: 4px solid #4db8e8;
+        }
+        .pass {
+            border-left-color: #60b515;
+        }
+        .fail {
+            border-left-color: #f54f47;
+        }
+        .result {
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .expected {
+            color: #60b515;
+        }
+        .actual {
+            color: #4db8e8;
+        }
+        .error {
+            color: #f54f47;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #3d5561;
+        }
+        th {
+            background: #1b2a32;
+        }
+        .summary {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .summary.pass {
+            background: #60b515;
+        }
+        .summary.fail {
+            background: #f54f47;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Decimal Precision Test Suite</h1>
+    <p>Testing BOM calculation accuracy with various decimal values</p>
+
+    <div id="results"></div>
+
+    <script src="/public/js/api.js"></script>
+    <script>
+        // Test cases that demonstrate the decimal precision problem
+        const testCases = [
+            {
+                name: "Simple Two Decimal Places",
+                items: [
+                    { quantity: 10, unit_cost: 1.50 },
+                    { quantity: 5, unit_cost: 2.25 }
+                ],
+                expected: 26.25
+            },
+            {
+                name: "Many Decimal Places (Original Problem)",
+                items: [
+                    { quantity: 1, unit_cost: 0.0155 },
+                    { quantity: 100, unit_cost: 0.0234 },
+                    { quantity: 50, unit_cost: 0.1678 }
+                ],
+                expected: 10.43  // 0.02 + 2.34 + 8.39 = 10.75 if not rounded properly
+            },
+            {
+                name: "Fractional Quantities",
+                items: [
+                    { quantity: 2.5, unit_cost: 3.333 },
+                    { quantity: 1.75, unit_cost: 4.444 }
+                ],
+                expected: 16.11  // (2.5 * 3.333) = 8.3325 -> 8.33, (1.75 * 4.444) = 7.777 -> 7.78
+            },
+            {
+                name: "Very Small Values",
+                items: [
+                    { quantity: 1000, unit_cost: 0.0015 },
+                    { quantity: 2000, unit_cost: 0.0023 },
+                    { quantity: 500, unit_cost: 0.0012 }
+                ],
+                expected: 6.70  // 1.50 + 4.60 + 0.60
+            },
+            {
+                name: "Large Accumulation (50 items)",
+                items: Array(50).fill(null).map(() => ({ quantity: 1, unit_cost: 0.0123 })),
+                expected: 0.62  // 50 * 0.0123 = 0.615 -> 0.62
+            },
+            {
+                name: "Mixed Large and Small",
+                items: [
+                    { quantity: 1, unit_cost: 8.5000 },
+                    { quantity: 10, unit_cost: 0.0150 },
+                    { quantity: 5, unit_cost: 0.0250 },
+                    { quantity: 1, unit_cost: 1.2500 }
+                ],
+                expected: 10.03  // 8.50 + 0.15 + 0.13 + 1.25
+            },
+            {
+                name: "Repeating Decimals",
+                items: [
+                    { quantity: 3, unit_cost: 0.3333 },
+                    { quantity: 7, unit_cost: 0.1429 }
+                ],
+                expected: 2.00  // (3 * 0.3333) = 0.9999 -> 1.00, (7 * 0.1429) = 1.0003 -> 1.00
+            },
+            {
+                name: "Edge Case: Zero Values",
+                items: [
+                    { quantity: 0, unit_cost: 10.00 },
+                    { quantity: 5, unit_cost: 0 },
+                    { quantity: 10, unit_cost: 2.50 }
+                ],
+                expected: 25.00
+            }
+        ];
+
+        function runTests() {
+            const resultsDiv = document.getElementById('results');
+            let passCount = 0;
+            let failCount = 0;
+            let html = '';
+
+            // Test the OLD way (without our fixes)
+            html += '<div class="test-section">';
+            html += '<h2>❌ OLD Calculation Method (BROKEN)</h2>';
+            html += '<p>This shows how calculations USED TO work (with floating point errors)</p>';
+            
+            testCases.forEach(test => {
+                const oldResult = test.items.reduce((sum, item) => {
+                    return sum + (item.quantity * item.unit_cost);
+                }, 0);
+                
+                const rounded = parseFloat(oldResult.toFixed(2));
+                const pass = rounded === test.expected;
+                
+                html += `<div class="test-case ${pass ? 'pass' : 'fail'}">`;
+                html += `<strong>${test.name}</strong><br>`;
+                html += `<div class="result">`;
+                html += `Expected: <span class="expected">$${test.expected.toFixed(2)}</span><br>`;
+                html += `Actual: <span class="${pass ? 'actual' : 'error'}">$${rounded.toFixed(2)}</span>`;
+                html += ` (raw: ${oldResult})`;
+                html += `</div>`;
+                if (!pass) {
+                    html += `<div class="error">❌ FAIL - Off by $${Math.abs(rounded - test.expected).toFixed(2)}</div>`;
+                }
+                html += '</div>';
+            });
+            html += '</div>';
+
+            // Test the NEW way (with our fixes)
+            html += '<div class="test-section">';
+            html += '<h2>✅ NEW Calculation Method (FIXED)</h2>';
+            html += '<p>Using proper decimal rounding at each step</p>';
+            
+            testCases.forEach(test => {
+                // Use the new utility functions
+                const newResult = calculateTotal(test.items);
+                const pass = newResult === test.expected;
+                
+                if (pass) passCount++;
+                else failCount++;
+                
+                html += `<div class="test-case ${pass ? 'pass' : 'fail'}">`;
+                html += `<strong>${test.name}</strong><br>`;
+                html += `<div class="result">`;
+                html += `Expected: <span class="expected">$${test.expected.toFixed(2)}</span><br>`;
+                html += `Actual: <span class="${pass ? 'actual' : 'error'}">$${newResult.toFixed(2)}</span>`;
+                html += `</div>`;
+                if (pass) {
+                    html += `<div style="color: #60b515">✅ PASS</div>`;
+                } else {
+                    html += `<div class="error">❌ FAIL - Off by $${Math.abs(newResult - test.expected).toFixed(2)}</div>`;
+                }
+                
+                // Show breakdown
+                html += '<table><tr><th>Qty</th><th>Unit Cost</th><th>Line Total</th></tr>';
+                test.items.forEach(item => {
+                    const lineTotal = calculateLineTotal(item.quantity, item.unit_cost);
+                    html += `<tr>`;
+                    html += `<td>${item.quantity}</td>`;
+                    html += `<td>$${item.unit_cost.toFixed(4)}</td>`;
+                    html += `<td>$${lineTotal.toFixed(2)}</td>`;
+                    html += `</tr>`;
+                });
+                html += '</table>';
+                html += '</div>';
+            });
+            html += '</div>';
+
+            // Summary
+            const allPass = failCount === 0;
+            html = `<div class="summary ${allPass ? 'pass' : 'fail'}">
+                ${allPass ? '✅ All Tests Passed!' : '❌ Some Tests Failed'} 
+                (${passCount}/${passCount + failCount})
+            </div>` + html;
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // Run tests when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', runTests);
+        } else {
+            runTests();
+        }
+    </script>
+</body>
+</html>

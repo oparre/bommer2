@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BOM Management Dashboard</title>
+    <!-- Clarity Design System CSS (local) -->
+    <link rel="stylesheet" href="public/node_modules/@cds/core/global.min.css">
+    <link rel="stylesheet" href="public/node_modules/@cds/core/styles/theme.dark.min.css">
+    <link rel="stylesheet" href="public/node_modules/@clr/ui/clr-ui.min.css">
+<style>
+        /* Noto Sans SC Font - local assets only */
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-weight: 300;
+            src: url('public/fonts/noto-sans-sc/NotoSansSC-Light.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-weight: 400;
+            src: url('public/fonts/noto-sans-sc/NotoSansSC-Regular.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-weight: 500;
+            src: url('public/fonts/noto-sans-sc/NotoSansSC-Medium.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-weight: 600;
+            src: url('public/fonts/noto-sans-sc/NotoSansSC-SemiBold.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-weight: 700;
+            src: url('public/fonts/noto-sans-sc/NotoSansSC-Bold.woff2') format('woff2');
+        }
+
+        /* Global font */
+        * {
+            font-family: 'Noto Sans SC', sans-serif !important;
+        }
+
+        :root {
+            --clr-app-bg: #0f1216;
+            --clr-surface: #1b2129;
+            --clr-surface-active: #262d38;
+            --clr-border: #313946;
+            --clr-primary: #49afd9;
+            --clr-primary-dark: #0079b8;
+            --clr-text-main: #fafafa;
+            --clr-text-muted: #adbbc4;
+            --clr-success: #5ebf6e;
+            --clr-warning: #ffb822;
+            --clr-danger: #e02200;
+        }
+
+        body {
+            background-color: var(--clr-app-bg);
+            color: var(--clr-text-main);
+        }
+
+        /* Basic layout utilities (Tailwind-like, only what this page needs) */
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .flex-1 { flex: 1 1 auto; }
+        .shrink-0 { flex-shrink: 0; }
+        .items-center { align-items: center; }
+        .items-start { align-items: flex-start; }
+        .items-baseline { align-items: baseline; }
+        .justify-between { justify-content: space-between; }
+        .justify-end { justify-content: flex-end; }
+        .justify-center { justify-content: center; }
+        .grow { flex-grow: 1; }
+
+        .gap-1 { gap: 0.25rem; }
+        .gap-1\.5 { gap: 0.375rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+        .gap-6 { gap: 1.5rem; }
+        .gap-10 { gap: 2.5rem; }
+
+        .w-full { width: 100%; }
+        .w-80 { width: 20rem; }
+        .max-w-sm { max-width: 24rem; }
+        .max-w-6xl { max-width: 72rem; }
+        .h-screen { min-height: 100vh; }
+        .h-8 { height: 2rem; }
+        .h-6 { height: 1.5rem; }
+        .size-8 { width: 2rem; height: 2rem; }
+        .size-10 { width: 2.5rem; height: 2.5rem; }
+
+        .rounded-md { border-radius: 4px; }
+        .rounded-sm { border-radius: 2px; }
+
+        .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+        .py-2\.5 { padding-top: 0.625rem; padding-bottom: 0.625rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+        .p-4 { padding: 1rem; }
+        .p-2\.5 { padding: 0.625rem; }
+        .py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+
+        .mx-2 { margin-left: 0.5rem; margin-right: 0.5rem; }
+        .my-2 { margin-top: 0.5rem; margin-bottom: 0.5rem; }
+        .mt-0\.5 { margin-top: 0.125rem; }
+
+        .border { border-width: 1px; border-style: solid; }
+
+        .text-xs { font-size: 0.75rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-base { font-size: 1rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .font-bold { font-weight: 700; }
+        .font-medium { font-weight: 500; }
+        .leading-none { line-height: 1; }
+
+        .uppercase { text-transform: uppercase; }
+
+        .grid { display: grid; }
+        .grid-cols-\[40px_2fr_1\.5fr_1fr_100px_80px_100px_40px\] {
+            grid-template-columns: 40px 2fr 1.5fr 1fr 100px 80px 100px 40px;
+        }
+
+        .overflow-hidden { overflow: hidden; }
+        .overflow-y-auto { overflow-y: auto; }
+
+        .cursor-pointer { cursor: pointer; }
+        .cursor-grab { cursor: grab; }
+        .active\:cursor-grabbing:active { cursor: grabbing; }
+
+        /* Color + border utilities */
+        .bg-clr-app-bg { background-color: var(--clr-app-bg); }
+        .bg-clr-surface { background-color: var(--clr-surface); }
+        .bg-clr-surface-active { background-color: var(--clr-surface-active); }
+        .bg-clr-primary { background-color: var(--clr-primary); }
+        .bg-clr-primary-dark { background-color: var(--clr-primary-dark); }
+
+        .text-clr-text-main { color: var(--clr-text-main); }
+        .text-clr-text-muted { color: var(--clr-text-muted); }
+        .text-clr-success { color: var(--clr-success); }
+
+        .border-clr-border { border-color: var(--clr-border); }
+        .border-clr-success { border-color: var(--clr-success); }
+
+        .shadow-clr-panel { box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); }
+        .shadow-clr-popover { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f1216;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #313946;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #49afd9;
+        }
+
+        .material-symbols-outlined {
+            display: none;
+        }
+
+        details > summary {
+            list-style: none;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+        *:focus-visible {
+            outline: 2px solid #49afd9;
+            outline-offset: 1px;
+        }
+    </style>
+</head>
+<body class="bg-clr-app-bg dark:bg-clr-app-bg font-display text-clr-text-main h-screen flex flex-col overflow-hidden selection:bg-clr-primary selection:text-white">
+<header class="flex shrink-0 items-center justify-between whitespace-nowrap border-b border-clr-border bg-clr-surface px-6 py-2.5 z-40 relative shadow-clr-panel">
+<div class="flex items-center gap-3 text-white">
+<div class="size-8 flex items-center justify-center bg-clr-primary-dark rounded-md text-white shadow-sm">
+<cds-icon shape="organization"></cds-icon>
+</div>
+<div class="flex flex-col">
+<h1 class="text-clr-text-main text-base font-semibold leading-none tracking-tight">BOM Manager</h1>
+<span class="text-[10px] text-clr-text-muted font-medium mt-0.5 uppercase tracking-wide">Enterprise Edition</span>
+</div>
+</div>
+<div class="flex flex-1 justify-end gap-4 items-center">
+<div class="hidden md:flex w-full max-w-sm items-center h-8 bg-clr-app-bg rounded-md border border-clr-border focus-within:border-clr-primary focus-within:ring-1 focus-within:ring-clr-primary/30 transition-all px-3">
+<cds-icon shape="search"></cds-icon>
+<input class="w-full bg-transparent border-none focus:ring-0 text-sm text-white placeholder:text-clr-text-muted/70 ml-2 h-full py-0" placeholder="Search..."/>
+</div>
+<div class="h-6 w-px bg-clr-border mx-2"></div>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 h-8 px-4 bg-clr-primary hover:bg-sky-400 active:bg-sky-600 transition-colors text-white text-xs font-semibold rounded-md shadow-sm border border-transparent">
+<cds-icon shape="save"></cds-icon>
+<span class="hidden sm:inline">Save</span>
+</button>
+<button class="flex items-center gap-2 h-8 px-4 bg-transparent border border-clr-border hover:bg-clr-surface-active hover:border-clr-text-muted/40 transition-colors text-clr-text-main text-xs font-semibold rounded-md">
+<cds-icon shape="download"></cds-icon>
+<span class="hidden sm:inline">Export</span>
+</button>
+</div>
+<div class="bg-center bg-no-repeat bg-cover rounded-md size-8 border border-clr-border cursor-pointer hover:ring-2 hover:ring-clr-primary/50 transition-all ml-2" data-alt="User profile picture"></div>
+</div>
+</header>
+<div class="shrink-0 bg-clr-surface border-b border-clr-border flex items-center justify-between px-6 py-3 gap-6 z-30">
+<div class="flex flex-col gap-1 min-w-[260px]">
+<div class="flex items-baseline gap-3">
+<h2 class="text-clr-text-main text-lg font-medium leading-none">Alpha-X1 Assembly</h2>
+<span class="px-1.5 py-0.5 rounded-sm text-[10px] font-bold bg-clr-border text-clr-text-muted uppercase tracking-wider border border-clr-border">PRJ-2024-88</span>
+</div>
+<div class="flex items-center gap-3 text-xs text-clr-text-muted mt-1">
+<div class="flex items-center gap-1.5 text-clr-success">
+<cds-icon shape="check-circle"></cds-icon>
+<span class="font-medium">Active</span>
+</div>
+<div class="h-3 w-px bg-clr-border"></div>
+<div class="flex items-center gap-1">
+<span>Last Modified: <span class="text-clr-text-main">Oct 24, 14:30</span></span>
+</div>
+</div>
+</div>
+<div class="hidden lg:block w-px h-10 bg-clr-border"></div>
+<div class="flex flex-col gap-1">
+<p class="text-[10px] font-bold text-clr-text-muted uppercase tracking-wider">Configuration</p>
+<div class="flex items-center gap-2">
+<details class="relative group">
+<summary class="flex items-center gap-2 bg-clr-app-bg border border-clr-border hover:border-clr-primary hover:text-clr-primary transition-all rounded-md px-3 py-1 cursor-pointer select-none text-xs font-medium text-clr-text-main shadow-sm h-7">
+   <span>Supplier Filter</span>
+   <cds-icon shape="angle" class="text-clr-text-muted"></cds-icon>
+   </summary>
+<div class="absolute top-full left-0 mt-1 w-56 bg-clr-surface border border-clr-border rounded-md shadow-clr-popover p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-100">
+<div class="flex flex-col gap-1">
+<label class="flex items-center gap-2 text-xs text-clr-text-muted hover:text-white cursor-pointer p-1.5 hover:bg-clr-surface-active rounded-sm transition-colors">
+<input checked="" class="form-checkbox rounded-sm text-clr-primary bg-clr-app-bg border-clr-border focus:ring-1 focus:ring-clr-primary size-3.5" type="checkbox"/>
+                            DigiKey
+                        </label>
+<label class="flex items-center gap-2 text-xs text-clr-text-muted hover:text-white cursor-pointer p-1.5 hover:bg-clr-surface-active rounded-sm transition-colors">
+<input checked="" class="form-checkbox rounded-sm text-clr-primary bg-clr-app-bg border-clr-border focus:ring-1 focus:ring-clr-primary size-3.5" type="checkbox"/>
+                            Mouser
+                        </label>
+<label class="flex items-center gap-2 text-xs text-clr-text-muted hover:text-white cursor-pointer p-1.5 hover:bg-clr-surface-active rounded-sm transition-colors">
+<input class="form-checkbox rounded-sm text-clr-primary bg-clr-app-bg border-clr-border focus:ring-1 focus:ring-clr-primary size-3.5" type="checkbox"/>
+                            Local Stock
+                        </label>
+</div>
+</div>
+</details>
+<details class="relative group">
+<summary class="flex items-center gap-2 bg-clr-app-bg border border-clr-border hover:border-clr-primary hover:text-clr-primary transition-all rounded-md px-3 py-1 cursor-pointer select-none text-xs font-medium text-clr-text-main shadow-sm h-7">
+   <span>Category</span>
+   <cds-icon shape="angle" class="text-clr-text-muted"></cds-icon>
+   </summary>
+<div class="absolute top-full left-0 mt-1 w-48 bg-clr-surface border border-clr-border rounded-md shadow-clr-popover p-3 z-50">
+<p class="text-xs text-clr-text-muted">Select categories...</p>
+</div>
+</details>
+</div>
+</div>
+<div class="hidden lg:block w-px h-10 bg-clr-border"></div>
+<div class="flex flex-col gap-1 grow min-w-0">
+<div class="flex justify-between items-center w-full max-w-lg">
+<p class="text-[10px] font-bold text-clr-text-muted uppercase tracking-wider">Version History</p>
+<button class="text-[10px] font-bold text-clr-primary hover:text-sky-300 flex items-center gap-1 transition-colors uppercase">
+                History Log <cds-icon shape="angle"></cds-icon>
+</button>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 shrink-0 bg-clr-success/10 px-2 py-0.5 rounded border border-clr-success/20">
+<span class="text-xs font-bold text-white leading-none">Rev 2.4</span>
+</div>
+</div>
+<span class="text-clr-border text-sm shrink-0">/</span>
+<div class="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity cursor-pointer shrink-0 group">
+<cds-icon shape="history"></cds-icon>
+<div class="flex flex-col">
+<span class="text-xs font-medium text-clr-text-muted group-hover:text-white transition-colors leading-none">Rev 2.3</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-1 overflow-hidden relative z-0">
+<main class="flex-1 flex flex-col bg-clr-app-bg relative overflow-hidden">
+<div class="grid grid-cols-[40px_2fr_1.5fr_1fr_100px_80px_100px_40px] gap-4 px-6 py-2 border-b border-clr-border bg-clr-surface text-[11px] font-bold text-clr-text-muted uppercase tracking-wider items-center shrink-0">
+<div class="text-center">#</div>
+<div>Component Detail</div>
+<div>Description</div>
+<div>Supplier</div>
+<div class="text-right">Cost (Unit)</div>
+<div class="text-center">Qty</div>
+<div class="text-right">Total</div>
+<div></div>
+</div>
+<div class="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+<div class="flex flex-col rounded-md border border-clr-border bg-clr-surface overflow-hidden shadow-sm">
+<div class="flex items-center justify-between bg-clr-surface border-b border-clr-border px-4 py-2 sticky top-0 z-10">
+<div class="flex items-center gap-3">
+<button class="text-clr-text-muted hover:text-white transition-colors" aria-label="Toggle group">
+<cds-icon shape="angle"></cds-icon>
+</button>
+<div class="flex items-center gap-2">
+<cds-icon shape="badge"></cds-icon>
+<h3 class="text-sm font-bold text-white tracking-tight">Electronics - PCB Main</h3>
+<span class="bg-clr-app-bg text-[10px] px-1.5 py-0.5 rounded border border-clr-border text-clr-text-muted">14 items</span>
+</div>
+</div>
+<div class="text-xs font-medium text-clr-text-muted">
+                        Group Subtotal: <span class="text-white font-bold ml-1 text-sm">$145.20</span>
+</div>
+</div>
+<div class="group relative grid grid-cols-[40px_2fr_1.5fr_1fr_100px_80px_100px_40px] gap-4 px-4 py-2 items-center bg-clr-app-bg hover:bg-clr-surface-active/50 transition-colors border-b border-clr-border/50 last:border-0">
+<div class="flex justify-center text-clr-text-muted opacity-30 group-hover:opacity-100 cursor-grab active:cursor-grabbing">
+<cds-icon shape="drag-handle"></cds-icon>
+</div>
+<div class="flex flex-col justify-center">
+<span class="text-sm font-medium text-white group-hover:text-clr-primary transition-colors">STM32F405RGT6</span>
+<span class="text-[10px] text-clr-text-muted font-mono mt-0.5">MPN: 497-17454-ND</span>
+</div>
+<div class="text-xs text-clr-text-muted truncate pr-2">IC MCU 32BIT 1MB FLASH 64LQFP</div>
+<div class="flex items-center gap-2">
+<div class="size-1.5 rounded-full bg-clr-success"></div>
+<span class="text-xs text-white">DigiKey</span>
+</div>
+<div class="text-xs text-white text-right tabular-nums font-mono">$8.40</div>
+<div class="flex justify-center">
+<input class="w-14 bg-clr-app-bg border border-clr-border hover:border-clr-text-muted focus:border-clr-primary rounded-sm px-1 py-0.5 text-center text-xs focus:ring-1 focus:ring-clr-primary text-white transition-all font-mono" type="number" aria-label="Quantity" value="1"/>
+</div>
+<div class="text-sm font-bold text-white text-right tabular-nums font-mono">$8.40</div>
+<div class="flex justify-end opacity-0 group-hover:opacity-100">
+<button class="p-1 text-clr-text-muted hover:text-clr-danger hover:bg-clr-danger/10 rounded-sm transition-colors" aria-label="Remove component"><cds-icon shape="trash"></cds-icon></button>
+</div>
+</div>
+<div class="group relative grid grid-cols-[40px_2fr_1.5fr_1fr_100px_80px_100px_40px] gap-4 px-4 py-2 items-center bg-clr-app-bg hover:bg-clr-surface-active/50 transition-colors border-b border-clr-border/50 last:border-0">
+<div class="flex justify-center text-clr-text-muted opacity-30 group-hover:opacity-100 cursor-grab active:cursor-grabbing">
+<cds-icon shape="drag-handle"></cds-icon>
+</div>
+<div class="flex flex-col justify-center">
+<span class="text-sm font-medium text-white group-hover:text-clr-primary transition-colors">0402 Resistor Kit</span>
+<span class="text-[10px] text-clr-text-muted font-mono mt-0.5">MPN: R-0402-10K</span>
+</div>
+<div class="text-xs text-clr-text-muted truncate pr-2">RES SMD 10K OHM 1% 1/16W 0402</div>
+<div class="flex items-center gap-2">
+<div class="size-1.5 rounded-full bg-clr-warning"></div>
+<span class="text-xs text-white">Mouser</span>
+</div>
+<div class="text-xs text-white text-right tabular-nums font-mono">$0.05</div>
+<div class="flex justify-center">
+<input class="w-14 bg-clr-app-bg border border-clr-border hover:border-clr-text-muted focus:border-clr-primary rounded-sm px-1 py-0.5 text-center text-xs focus:ring-1 focus:ring-clr-primary text-white transition-all font-mono" type="number" aria-label="Quantity" value="12"/>
+</div>
+<div class="text-sm font-bold text-white text-right tabular-nums font-mono">$0.60</div>
+<div class="flex justify-end opacity-0 group-hover:opacity-100">
+<button class="p-1 text-clr-text-muted hover:text-clr-danger hover:bg-clr-danger/10 rounded-sm transition-colors" aria-label="Remove component"><cds-icon shape="trash"></cds-icon></button>
+</div>
+</div>
+<div class="h-8 mx-4 my-2 border border-dashed border-clr-border rounded-sm flex items-center justify-center text-[10px] text-clr-text-muted uppercase tracking-wide hover:border-clr-primary hover:bg-clr-primary/5 transition-colors cursor-pointer">
+                    + Add Component to Electronics
+                </div>
+</div>
+<div class="flex flex-col rounded-md border border-clr-border bg-clr-surface overflow-hidden shadow-sm">
+<div class="flex items-center justify-between bg-clr-surface border-b border-clr-border px-4 py-2 sticky top-0 z-10">
+<div class="flex items-center gap-3">
+<button class="text-clr-text-muted hover:text-white transition-colors" aria-label="Toggle group">
+<cds-icon shape="angle"></cds-icon>
+</button>
+<div class="flex items-center gap-2">
+<cds-icon shape="wrench"></cds-icon>
+<h3 class="text-sm font-bold text-white tracking-tight">Mechanical - Housing</h3>
+<span class="bg-clr-app-bg text-[10px] px-1.5 py-0.5 rounded border border-clr-border text-clr-text-muted">3 items</span>
+</div>
+</div>
+<div class="text-xs font-medium text-clr-text-muted">
+                        Group Subtotal: <span class="text-white font-bold ml-1 text-sm">$50.00</span>
+</div>
+</div>
+<div class="group relative grid grid-cols-[40px_2fr_1.5fr_1fr_100px_80px_100px_40px] gap-4 px-4 py-2 items-center bg-clr-app-bg hover:bg-clr-surface-active/50 transition-colors border-b border-clr-border/50 last:border-0">
+<div class="flex justify-center text-clr-text-muted opacity-30 group-hover:opacity-100 cursor-grab active:cursor-grabbing">
+<cds-icon shape="drag-handle"></cds-icon>
+</div>
+<div class="flex flex-col justify-center">
+<span class="text-sm font-medium text-white group-hover:text-clr-primary transition-colors">Alu-Extrusion 2020</span>
+<span class="text-[10px] text-clr-text-muted font-mono mt-0.5">MPN: EX-2020-BLK</span>
+</div>
+<div class="text-xs text-clr-text-muted truncate pr-2">T-Slot Aluminum Extrusion - Black Anodized</div>
+<div class="flex items-center gap-2">
+<div class="size-1.5 rounded-full bg-clr-primary"></div>
+<span class="text-xs text-white">Local</span>
+</div>
+<div class="text-xs text-white text-right tabular-nums font-mono">$12.50</div>
+<div class="flex justify-center">
+<input class="w-14 bg-clr-app-bg border border-clr-border hover:border-clr-text-muted focus:border-clr-primary rounded-sm px-1 py-0.5 text-center text-xs focus:ring-1 focus:ring-clr-primary text-white transition-all font-mono" type="number" aria-label="Quantity" value="4"/>
+</div>
+<div class="text-sm font-bold text-white text-right tabular-nums font-mono">$50.00</div>
+<div class="flex justify-end opacity-0 group-hover:opacity-100">
+<button class="p-1 text-clr-text-muted hover:text-clr-danger hover:bg-clr-danger/10 rounded-sm transition-colors" aria-label="Remove component"><cds-icon shape="trash"></cds-icon></button>
+</div>
+</div>
+</div>
+</div>
+<div class="shrink-0 bg-clr-surface border-t border-clr-border p-4 shadow-clr-popover z-20">
+<div class="max-w-6xl mx-auto flex items-center justify-between">
+<div class="flex gap-10">
+<div class="flex flex-col">
+<p class="text-[10px] text-clr-text-muted uppercase tracking-wider font-bold mb-0.5">Total Parts</p>
+<p class="text-lg font-bold text-white leading-none">17</p>
+</div>
+<div class="flex flex-col">
+<p class="text-[10px] text-clr-text-muted uppercase tracking-wider font-bold mb-0.5">Unique Groups</p>
+<p class="text-lg font-bold text-white leading-none">2</p>
+</div>
+</div>
+<div class="flex items-end flex-col bg-clr-app-bg px-4 py-2 rounded-md border border-clr-border shadow-inner">
+<p class="text-[10px] text-clr-text-muted uppercase tracking-wider font-bold mb-0.5">Estimated Grand Total</p>
+<p class="text-2xl font-bold text-clr-primary tabular-nums leading-none">$230.20</p>
+</div>
+</div>
+</div>
+</main>
+<aside class="w-80 flex flex-col border-l border-clr-border bg-clr-surface overflow-hidden shrink-0 z-10 shadow-[-4px_0_15px_rgba(0,0,0,0.2)]">
+<div class="p-4 border-b border-clr-border bg-clr-surface">
+<div class="flex items-center justify-between mb-3">
+<h3 class="font-semibold text-white text-sm tracking-tight">Component Library</h3>
+<button class="text-clr-text-muted hover:text-white" aria-label="Filter components">
+<cds-icon shape="filter"></cds-icon>
+</button>
+</div>
+<div class="relative">
+   <cds-icon class="absolute left-3 top-2 text-clr-text-muted" shape="search"></cds-icon>
+   <input class="w-full bg-clr-app-bg border border-clr-border rounded-md py-1.5 pl-9 pr-3 text-xs text-white placeholder:text-clr-text-muted focus:ring-1 focus:ring-clr-primary focus:border-clr-primary" placeholder="Search parts..." type="text"/>
+   </div>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-4">
+<div>
+<p class="text-[10px] font-bold text-clr-text-muted uppercase tracking-wider mb-2">Recently Used</p>
+<div class="space-y-2">
+<div class="bg-clr-app-bg rounded-md p-2.5 border border-clr-border hover:border-clr-primary/50 cursor-grab active:cursor-grabbing group transition-all hover:shadow-md flex gap-3 items-start relative">
+<div class="size-10 rounded-sm bg-clr-surface shrink-0 overflow-hidden bg-center border border-clr-border" data-alt="Capacitor"></div>
+<div class="flex-1 min-w-0">
+<h4 class="text-xs font-bold text-white truncate leading-tight">100uF Capacitor</h4>
+<p class="text-[10px] text-clr-text-muted truncate mt-0.5">Electrolytic 25V</p>
+<div class="flex justify-between items-center mt-2">
+<span class="text-[10px] font-medium text-clr-text-muted bg-clr-surface px-1.5 rounded border border-clr-border/50">$0.12</span>
+</div>
+</div>
+<button class="absolute top-2 right-2 size-6 flex items-center justify-center rounded-sm text-clr-text-muted hover:bg-clr-primary hover:text-white transition-colors opacity-0 group-hover:opacity-100" aria-label="Add component">
+<span class="material-symbols-outlined !text-[16px]">add</span>
+</button>
+</div>
+<div class="bg-clr-app-bg rounded-md p-2.5 border border-clr-border hover:border-clr-primary/50 cursor-grab active:cursor-grabbing group transition-all hover:shadow-md flex gap-3 items-start relative">
+<div class="size-10 rounded-sm bg-clr-surface shrink-0 overflow-hidden bg-center border border-clr-border" data-alt="Microchip"></div>
+<div class="flex-1 min-w-0">
+<h4 class="text-xs font-bold text-white truncate leading-tight">ATmega328P</h4>
+<p class="text-[10px] text-clr-text-muted truncate mt-0.5">8-bit AVR Micro</p>
+<div class="flex justify-between items-center mt-2">
+<span class="text-[10px] font-medium text-clr-text-muted bg-clr-surface px-1.5 rounded border border-clr-border/50">$2.10</span>
+</div>
+</div>
+<button class="absolute top-2 right-2 size-6 flex items-center justify-center rounded-sm text-clr-text-muted hover:bg-clr-primary hover:text-white transition-colors opacity-0 group-hover:opacity-100" aria-label="Add component">
+<span class="material-symbols-outlined !text-[16px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<div>
+<p class="text-[10px] font-bold text-clr-text-muted uppercase tracking-wider mb-2">Hardware</p>
+<div class="space-y-2">
+<div class="bg-clr-app-bg rounded-md p-2.5 border border-clr-border hover:border-clr-primary/50 cursor-grab active:cursor-grabbing group transition-all hover:shadow-md flex gap-3 items-start relative">
+<div class="size-10 rounded-sm bg-clr-surface shrink-0 flex items-center justify-center text-clr-text-muted border border-clr-border"></div>
+<div class="flex-1 min-w-0">
+<h4 class="text-xs font-bold text-white truncate leading-tight">M3 Hex Screw</h4>
+<p class="text-[10px] text-clr-text-muted truncate mt-0.5">Stainless Steel, 10mm</p>
+<div class="flex justify-between items-center mt-2">
+<span class="text-[10px] font-medium text-clr-text-muted bg-clr-surface px-1.5 rounded border border-clr-border/50">$0.02</span>
+</div>
+</div>
+<button class="absolute top-2 right-2 size-6 flex items-center justify-center rounded-sm text-clr-text-muted hover:bg-clr-primary hover:text-white transition-colors opacity-0 group-hover:opacity-100" aria-label="Add component">
+<span class="material-symbols-outlined !text-[16px]">add</span>
+</button>
+</div>
+<div class="bg-clr-app-bg rounded-md p-2.5 border border-clr-border hover:border-clr-primary/50 cursor-grab active:cursor-grabbing group transition-all hover:shadow-md flex gap-3 items-start relative">
+<div class="size-10 rounded-sm bg-clr-surface shrink-0 flex items-center justify-center text-clr-text-muted border border-clr-border"></div>
+<div class="flex-1 min-w-0">
+<h4 class="text-xs font-bold text-white truncate leading-tight">Nylon Standoff</h4>
+<p class="text-[10px] text-clr-text-muted truncate mt-0.5">M3 Female-Female</p>
+<div class="flex justify-between items-center mt-2">
+<span class="text-[10px] font-medium text-clr-text-muted bg-clr-surface px-1.5 rounded border border-clr-border/50">$0.15</span>
+</div>
+</div>
+<button class="absolute top-2 right-2 size-6 flex items-center justify-center rounded-sm text-clr-text-muted hover:bg-clr-primary hover:text-white transition-colors opacity-0 group-hover:opacity-100" aria-label="Add component">
+<span class="material-symbols-outlined !text-[16px]">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</div>
+
+    <script>
+        // Simple BOM creation simulation using the existing UI structure
+        document.addEventListener('DOMContentLoaded', function () {
+            const electronicsGroup = document.querySelector('h3.text-sm.font-bold.text-white.tracking-tight');
+            if (!electronicsGroup) return;
+
+            const electronicsContainer = electronicsGroup.closest('.flex.flex-col.rounded-md');
+            const mechanicalContainer = electronicsContainer.nextElementSibling;
+
+            const bottomSummary = document.querySelector('.shrink-0.bg-clr-surface.border-t.border-clr-border.p-4');
+            const totalPartsEl = bottomSummary && bottomSummary.querySelector('p.text-lg.font-bold.text-white.leading-none');
+            const grandTotalEl = bottomSummary && bottomSummary.querySelector('p.text-2xl.font-bold.text-clr-primary.tabular-nums.leading-none');
+
+            const componentDefs = [
+                {
+                    name: '100uF Capacitor',
+                    mpn: 'CAP-100UF-25V',
+                    description: 'Electrolytic capacitor 100µF 25V',
+                    supplier: 'Generic',
+                    unitCost: 0.12
+                },
+                {
+                    name: 'ATmega328P',
+                    mpn: 'ATMEGA328P-AU',
+                    description: '8-bit AVR Microcontroller',
+                    supplier: 'Mouser',
+                    unitCost: 2.10
+                },
+                {
+                    name: 'M3 Hex Screw',
+                    mpn: 'SCREW-M3-10',
+                    description: 'Stainless steel M3, 10mm',
+                    supplier: 'Local',
+                    unitCost: 0.02
+                },
+                {
+                    name: 'Nylon Standoff',
+                    mpn: 'STANDOFF-M3-NYLON',
+                    description: 'M3 female-female nylon standoff',
+                    supplier: 'Local',
+                    unitCost: 0.15
+                }
+            ];
+
+            function parseMoney(value) {
+                if (typeof value !== 'string') return 0;
+                const num = parseFloat(value.replace(/[^0-9.]/g, ''));
+                return isNaN(num) ? 0 : num;
+            }
+
+            function formatMoney(value) {
+                return '$' + value.toFixed(2);
+            }
+
+            function recalcGroup(container) {
+                if (!container) return { groupTotal: 0, groupQty: 0 };
+                const rows = container.querySelectorAll('.group.relative.grid');
+                let groupTotal = 0;
+                let groupQty = 0;
+
+                rows.forEach(row => {
+                    const qtyInput = row.querySelector('input[type="number"][aria-label="Quantity"]');
+                    const unitCell = row.querySelector('div.text-xs.text-white.text-right.tabular-nums.font-mono');
+                    const totalCell = row.querySelector('div.text-sm.font-bold.text-white.text-right.tabular-nums.font-mono');
+                    if (!qtyInput || !unitCell || !totalCell) return;
+
+                    const qty = parseInt(qtyInput.value || '0', 10) || 0;
+                    const unitCost = parseMoney(unitCell.textContent || '0');
+                    // Round to 2 decimal places to avoid floating point precision errors
+                    const rowTotal = Math.round((qty * unitCost) * 100) / 100;
+
+                    totalCell.textContent = formatMoney(rowTotal);
+                    // Accumulate with proper rounding
+                    groupTotal = Math.round((groupTotal + rowTotal) * 100) / 100;
+                    groupQty += qty;
+                });
+
+                const headerSubtotal = container.querySelector('.text-xs.font-medium.text-clr-text-muted span.text-white.font-bold.ml-1.text-sm');
+                if (headerSubtotal) {
+                    headerSubtotal.textContent = formatMoney(groupTotal);
+                }
+
+                return { groupTotal, groupQty };
+            }
+
+            function recalcAll() {
+                const electronics = recalcGroup(electronicsContainer);
+                const mechanical = recalcGroup(mechanicalContainer);
+
+                const totalQty = (electronics.groupQty || 0) + (mechanical.groupQty || 0);
+                const grandTotal = (electronics.groupTotal || 0) + (mechanical.groupTotal || 0);
+
+                if (totalPartsEl) {
+                    totalPartsEl.textContent = String(totalQty);
+                }
+                if (grandTotalEl) {
+                    grandTotalEl.textContent = formatMoney(grandTotal);
+                }
+            }
+
+            function wireQuantityInputs() {
+                const allInputs = document.querySelectorAll('main input[type="number"]');
+                allInputs.forEach(input => {
+                    if (!input.hasAttribute('aria-label')) {
+                        input.setAttribute('aria-label', 'Quantity');
+                    }
+                    input.addEventListener('input', recalcAll);
+                });
+            }
+
+            function createRowFromTemplate(templateRow, def) {
+                const row = templateRow.cloneNode(true);
+
+                const dragCell = row.querySelector('div.flex.justify-center.text-clr-text-muted');
+                if (dragCell) dragCell.classList.add('opacity-30');
+
+                const nameEl = row.querySelector('span.text-sm.font-medium.text-white');
+                const mpnEl = row.querySelector('span.text-[10px].text-clr-text-muted.font-mono.mt-0.5');
+                const descEl = row.querySelector('div.text-xs.text-clr-text-muted.truncate.pr-2');
+                const supplierEl = row.querySelector('div.flex.items-center.gap-2 span.text-xs.text-white');
+                const unitCell = row.querySelector('div.text-xs.text-white.text-right.tabular-nums.font-mono');
+                const qtyInput = row.querySelector('input[type="number"][aria-label="Quantity"]');
+
+                if (nameEl) nameEl.textContent = def.name;
+                if (mpnEl) mpnEl.textContent = 'MPN: ' + def.mpn;
+                if (descEl) descEl.textContent = def.description;
+                if (supplierEl) supplierEl.textContent = def.supplier;
+                if (unitCell) unitCell.textContent = formatMoney(def.unitCost);
+                if (qtyInput) qtyInput.value = '1';
+
+                const deleteBtn = row.querySelector('button[aria-label="Remove component"]');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        row.remove();
+                        recalcAll();
+                    });
+                }
+
+                const newQtyInput = row.querySelector('input[type="number"][aria-label="Quantity"]');
+                if (newQtyInput) {
+                    newQtyInput.addEventListener('input', recalcAll);
+                }
+
+                return row;
+            }
+
+            function wireLibraryAddButtons() {
+                const libraryAside = document.querySelector('aside');
+                if (!libraryAside) return;
+
+                const addButtons = Array.from(libraryAside.querySelectorAll('button[aria-label="Add component"]'));
+
+                const templateRow = electronicsContainer && electronicsContainer.querySelector('.group.relative.grid');
+                const insertTarget = electronicsContainer && electronicsContainer.querySelector('.h-8.mx-4.my-2.border.border-dashed');
+
+                if (!templateRow || !insertTarget) return;
+
+                addButtons.forEach((btn, index) => {
+                    const def = componentDefs[index];
+                    if (!def) return;
+                    btn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const newRow = createRowFromTemplate(templateRow, def);
+                        insertTarget.before(newRow);
+                        recalcAll();
+                    });
+                });
+            }
+
+            function wireSaveButton() {
+                const button = document.querySelector('header button');
+                if (!button) return;
+
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const bomState = {
+                        assemblyName: document.querySelector('h2.text-clr-text-main.text-lg.font-medium.leading-none')?.textContent || '',
+                        projectCode: document.querySelector('span.bg-clr-border.text-clr-text-muted')?.textContent || '',
+                        totalParts: totalPartsEl ? totalPartsEl.textContent : '',
+                        grandTotal: grandTotalEl ? grandTotalEl.textContent : '',
+                    };
+                    try {
+                        localStorage.setItem('bommer-bom-draft', JSON.stringify(bomState));
+                    } catch (err) {
+                        console.warn('Unable to persist draft BOM to localStorage', err);
+                    }
+                    console.log('Simulated BOM save:', bomState);
+                });
+            }
+
+            wireQuantityInputs();
+            wireLibraryAddButtons();
+            wireSaveButton();
+            recalcAll();
+        });
+    </script>
+</body></html>

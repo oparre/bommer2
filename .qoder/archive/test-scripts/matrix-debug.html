@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" cds-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOM Matrix Test</title>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: white;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-card {
+            background-color: #2a2a2a;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .error {
+            color: #ff6666;
+            background-color: #3a1a1a;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #66ff66;
+            background-color: #1a3a1a;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BOM Matrix Debug Test</h1>
+        
+        <div class="test-card">
+            <h2>JavaScript Test</h2>
+            <div id="js-test">JavaScript not working</div>
+        </div>
+        
+        <div class="test-card">
+            <h2>Template Literal Test</h2>
+            <div id="template-test">Template test not working</div>
+        </div>
+        
+        <div class="test-card">
+            <h2>API Test</h2>
+            <div id="api-test">API test not started</div>
+        </div>
+    </div>
+
+    <script>
+        // Test 1: Basic JavaScript execution
+        document.getElementById('js-test').innerHTML = '<div class="success">✓ JavaScript is working!</div>';
+        
+        // Test 2: Template literals
+        const testName = "Template Literal Test";
+        const testValue = 42;
+        document.getElementById('template-test').innerHTML = 
+            `<div class="success">✓ ${testName} working! Value: ${testValue}</div>`;
+        
+        // Test 3: API call
+        async function testAPI() {
+            try {
+                const response = await fetch('/api/boms.php?action=matrix&scope=assembly&id=1', {
+                    credentials: 'same-origin'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('api-test').innerHTML = 
+                        `<div class="success">✓ API call successful! Found ${result.data.boms.length} BOMs</div>`;
+                } else {
+                    document.getElementById('api-test').innerHTML = 
+                        `<div class="error">✗ API error: ${result.error}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('api-test').innerHTML = 
+                    `<div class="error">✗ API call failed: ${error.message}</div>`;
+            }
+        }
+        
+        // Run API test
+        testAPI();
+    </script>
+</body>
+</html>

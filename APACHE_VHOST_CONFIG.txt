@@ -1,0 +1,124 @@
+# Apache Virtual Host Configuration for Bommer Authentication System
+# Location: C:\wamp64\bin\apache\apache2.4.59\conf\extra\httpd-vhosts.conf
+
+# OPTION 1: Using custom domain (bommer.local)
+# ================================================
+
+<VirtualHost *:80>
+    ServerName bommer.local
+    ServerAlias www.bommer.local
+    DocumentRoot "c:/wamp64/www/bommer"
+    Protocols h2c http/1.1
+    
+    <Directory "c:/wamp64/www/bommer/">
+        Options +Indexes +Includes +FollowSymLinks +MultiViews
+        AllowOverride All
+        Require all granted
+    </Directory>
+    
+    ErrorLog "logs/bommer-error.log"
+    CustomLog "logs/bommer-access.log" combined
+</VirtualHost>
+
+# IMPORTANT: After adding this, you need to:
+# 1. Edit C:\Windows\System32\drivers\etc\hosts (as Administrator)
+# 2. Add this line:
+#    127.0.0.1  bommer.local
+# 3. Restart Apache
+# 4. Access via: http://bommer.local/auth/login.php
+
+
+# OPTION 2: Using subdomain approach
+# ================================================
+
+<VirtualHost *:80>
+    ServerName auth.localhost
+    DocumentRoot "c:/wamp64/www/bommer"
+    Protocols h2c http/1.1
+    
+    <Directory "c:/wamp64/www/bommer/">
+        Options +Indexes +Includes +FollowSymLinks +MultiViews
+        AllowOverride All
+        Require all granted
+    </Directory>
+    
+    ErrorLog "logs/bommer-error.log"
+    CustomLog "logs/bommer-access.log" combined
+</VirtualHost>
+
+# IMPORTANT: After adding this, you need to:
+# 1. Edit C:\Windows\System32\drivers\etc\hosts (as Administrator)
+# 2. Add this line:
+#    127.0.0.1  auth.localhost
+# 3. Restart Apache
+# 4. Access via: http://auth.localhost/auth/login.php
+
+
+# OPTION 3: Simple fix - Use default localhost with correct DocumentRoot
+# ================================================
+# Remove the existing <VirtualHost *:80> block for bommer
+# And just access via: http://localhost/bommer/auth/login.php
+# No vhost needed, just use the default WAMP setup
+
+
+# ================================================
+# STEP-BY-STEP INSTRUCTIONS
+# ================================================
+
+1. Open: C:\wamp64\bin\apache\apache2.4.59\conf\extra\httpd-vhosts.conf
+   
+2. REMOVE this incorrect block:
+   <VirtualHost *:80>
+       ServerName localhost/bommer
+       DocumentRoot "c:/wamp64/www/bommer/public"
+       ...
+   </VirtualHost>
+
+3. ADD one of the options above (Option 1 recommended)
+
+4. If using Option 1 or 2, edit hosts file:
+   - Open Notepad as Administrator
+   - Open: C:\Windows\System32\drivers\etc\hosts
+   - Add: 127.0.0.1  bommer.local
+
+5. Restart Apache:
+   - Open WAMP menu → Apache → Service administration → Restart Service
+
+6. Test the setup:
+   - Clear browser cache
+   - Navigate to: http://bommer.local/auth/login.php (Option 1)
+     or http://auth.localhost/auth/login.php (Option 2)
+     or http://localhost/bommer/auth/login.php (Option 3)
+
+
+# ================================================
+# TROUBLESHOOTING
+# ================================================
+
+If you get 404 errors after fixing:
+1. Make sure DocumentRoot points to: c:/wamp64/www/bommer (NOT c:/wamp64/www/bommer/public)
+2. Check that AllowOverride All is set (for .htaccess support)
+3. Verify Apache restarted successfully (check WAMP icon)
+4. Clear browser cache
+
+If you get "Forbidden" errors:
+1. Check that "Require all granted" is in the Directory block
+2. Verify folder permissions (should be readable by Apache)
+
+If you get "Server not found":
+1. Verify hosts file entry (if using custom domain)
+2. Check DNS cache: ipconfig /flushdns in cmd
+3. Verify ServerName matches hosts file entry
+
+
+# ================================================
+# RECOMMENDED SETUP (Option 1)
+# ================================================
+
+For the cleanest setup, I recommend:
+- Custom domain: bommer.local
+- DocumentRoot: c:/wamp64/www/bommer
+- Access URLs:
+  * http://bommer.local/auth/login.php
+  * http://bommer.local/admin/admin-users.php
+  * http://bommer.local/index.html

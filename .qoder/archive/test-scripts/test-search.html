@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Global Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .results {
+            border: 1px solid #ddd;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+        .error {
+            color: red;
+            padding: 10px;
+            background: #fee;
+            border: 1px solid red;
+            border-radius: 4px;
+        }
+        .success {
+            color: green;
+            padding: 10px;
+            background: #efe;
+            border: 1px solid green;
+            border-radius: 4px;
+        }
+        pre {
+            background: #333;
+            color: #fff;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Global Search API</h1>
+    <input type="text" id="searchInput" placeholder="Type search term and press Enter..." />
+    
+    <div id="results"></div>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const resultsDiv = document.getElementById('results');
+
+        searchInput.addEventListener('keyup', async (e) => {
+            if (e.key === 'Enter') {
+                const query = searchInput.value.trim();
+                if (!query) return;
+
+                resultsDiv.innerHTML = '<p>Searching...</p>';
+
+                try {
+                    const [bomsResp, projectsResp, assembliesResp, componentsResp, optionalsResp] = await Promise.all([
+                        fetch(`/api/boms.php?search=${encodeURIComponent(query)}`),
+                        fetch(`/api/projects.php?search=${encodeURIComponent(query)}`),
+                        fetch(`/api/assemblies.php?search=${encodeURIComponent(query)}`),
+                        fetch(`/api/components.php?search=${encodeURIComponent(query)}`),
+                        fetch(`/api/projects.php?action=list_all_optionals&search=${encodeURIComponent(query)}`)
+                    ]);
+
+                    const boms = await bomsResp.json();
+                    const projects = await projectsResp.json();
+                    const assemblies = await assembliesResp.json();
+                    const components = await componentsResp.json();
+                    const optionals = await optionalsResp.json();
+
+                    let html = '';
+
+                    if (boms.error) {
+                        html += `<div class="error"><strong>BOMs Error:</strong> ${boms.error}</div>`;
+                    } else {
+                        html += `<div class="success"><strong>BOMs:</strong> Found ${boms.data ? boms.data.length : 0} results</div>`;
+                        html += `<pre>${JSON.stringify(boms, null, 2)}</pre>`;
+                    }
+
+                    if (projects.error) {
+                        html += `<div class="error"><strong>Projects Error:</strong> ${projects.error}</div>`;
+                    } else {
+                        html += `<div class="success"><strong>Projects:</strong> Found ${projects.data ? projects.data.length : 0} results</div>`;
+                        html += `<pre>${JSON.stringify(projects, null, 2)}</pre>`;
+                    }
+
+                    if (assemblies.error) {
+                        html += `<div class="error"><strong>Assemblies Error:</strong> ${assemblies.error}</div>`;
+                    } else {
+                        html += `<div class="success"><strong>Assemblies:</strong> Found ${assemblies.data ? assemblies.data.length : 0} results</div>`;
+                        html += `<pre>${JSON.stringify(assemblies, null, 2)}</pre>`;
+                    }
+
+                    if (components.error) {
+                        html += `<div class="error"><strong>Components Error:</strong> ${components.error}</div>`;
+                    } else {
+                        html += `<div class="success"><strong>Components:</strong> Found ${components.data ? components.data.length : 0} results</div>`;
+                        html += `<pre>${JSON.stringify(components, null, 2)}</pre>`;
+                    }
+
+                    if (optionals.error) {
+                        html += `<div class="error"><strong>Optionals Error:</strong> ${optionals.error}</div>`;
+                    } else {
+                        html += `<div class="success"><strong>Optional Projects:</strong> Found ${optionals.data ? optionals.data.length : 0} results</div>`;
+                        html += `<pre>${JSON.stringify(optionals, null, 2)}</pre>`;
+                    }
+
+                    resultsDiv.innerHTML = html;
+
+                } catch (error) {
+                    resultsDiv.innerHTML = `<div class="error"><strong>Error:</strong> ${error.message}</div>`;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

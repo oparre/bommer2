@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en" cds-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOM Comparison - Side by Side</title>
+    
+    <!-- Clarity Design System CSS (Local) -->
+    <link rel="stylesheet" href="public/node_modules/@cds/core/global.min.css">
+    <link rel="stylesheet" href="public/node_modules/@cds/core/styles/theme.dark.min.css">
+    <link rel="stylesheet" href="public/node_modules/@clr/ui/clr-ui.min.css">
+    
+    <style>
+        /* Noto Sans SC Font */
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-weight: 300;
+            src: url('public/fonts/noto-sans-sc/NotoSansSC-Light.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-weight: 400;
+            src: url('public/fonts/noto-sans-sc/NotoSansSC-Regular.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-weight: 500;
+            src: url('public/fonts/noto-sans-sc/NotoSansSC-Medium.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-weight: 600;
+            src: url('public/fonts/noto-sans-sc/NotoSansSC-SemiBold.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-weight: 700;
+            src: url('public/fonts/noto-sans-sc/NotoSansSC-Bold.woff2') format('woff2');
+        }
+
+        /* Global Font - Apply Noto Sans SC to ALL elements */
+        * {
+            font-family: 'Noto Sans SC', sans-serif !important;
+        }
+
+        body {
+            padding: 1rem;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        h1 {
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* Comparison Container */
+        .comparison-container {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: hidden;
+            padding-bottom: 1rem;
+        }
+
+        /* Each BOM column */
+        .bom-column {
+            flex: 1 1 0;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .bom-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+        }
+
+        .bom-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sku-label {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .table {
+            font-size: 0.65rem;
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        .table th {
+            font-weight: 600;
+            font-size: 0.6rem;
+            padding: 0.3rem 0.2rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .table td {
+            font-size: 0.65rem;
+            padding: 0.3rem 0.2rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Clarity Design System Hover Effects */
+        .table tbody tr:hover {
+            background-color: var(--clr-datagrid-row-hover-color, rgba(255, 255, 255, 0.05));
+            cursor: pointer;
+        }
+
+        /* Subtotal rows have different hover effect */
+        .table tbody tr[style*="background-color"]:hover {
+            background-color: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        /* Icon container styling */
+        .part-icon-container {
+            position: relative;
+            display: inline-block;
+            vertical-align: middle;
+            margin: 0;
+            padding: 0;
+            width: 14px;
+            height: 14px;
+            margin-right: 4px;
+            line-height: 1;
+        }
+
+        .part-icon {
+            width: 14px;
+            height: 14px;
+            display: block;
+            margin: 0;
+            padding: 0;
+            vertical-align: middle;
+        }
+
+        /* Hover image preview */
+        .part-icon-preview {
+            display: none;
+            position: absolute;
+            left: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 80px;
+            height: 80px;
+            z-index: 1000;
+            background: var(--clr-datagrid-popover-bg-color, #21333b);
+            border: 1px solid var(--clr-datagrid-popover-border-color, #495865);
+            box-shadow: 0 3px 9px rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+            padding: 4px;
+        }
+
+        .part-icon-container:hover .part-icon-preview {
+            display: block;
+        }
+
+        .part-icon-preview img,
+        .part-icon-preview svg {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Ensure proper alignment in cells with icons */
+        .table tbody td:first-child {
+            vertical-align: middle;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        /* Number column styling */
+        .number-col {
+            width: 4%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            padding-left: 0.1rem !important;
+            padding-right: 0.1rem !important;
+        }
+
+        /* Column width distribution */
+        .table th:nth-child(2),
+        .table td:nth-child(2) {
+            width: 16%;
+        }
+
+        .table th:nth-child(3),
+        .table td:nth-child(3) {
+            width: 13%;
+        }
+
+        .table th:nth-child(4),
+        .table td:nth-child(4) {
+            width: 23%;
+        }
+
+        .table th:nth-child(5),
+        .table td:nth-child(5) {
+            width: 10%;
+        }
+
+        .table th:nth-child(6),
+        .table td:nth-child(6) {
+            width: 8%;
+        }
+
+        .table th:nth-child(7),
+        .table td:nth-child(7) {
+            width: 8%;
+        }
+
+        .table th:nth-child(8),
+        .table td:nth-child(8) {
+            width: 7%;
+        }
+
+        .table th:nth-child(9),
+        .table td:nth-child(9) {
+            width: 12%;
+        }
+
+        /* View toggle switch */
+        .view-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .view-toggle-label {
+            font-size: 0.7rem;
+            color: var(--clr-global-font-color, #fafafa);
+            opacity: 0.9;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 90px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--clr-btn-default-bg-color, #324f60);
+            border: 1px solid var(--clr-btn-default-border-color, #495865);
+            transition: 0.3s;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 5px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 40px;
+            left: 2px;
+            bottom: 2px;
+            background-color: var(--clr-btn-primary-bg-color, #0072a3);
+            transition: 0.3s;
+            border-radius: 9px;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(46px);
+        }
+
+        .toggle-text {
+            font-size: 0.55rem;
+            font-weight: 500;
+            z-index: 1;
+            color: var(--clr-global-font-color, #fafafa);
+            pointer-events: none;
+            text-transform: uppercase;
+        }
+
+        .toggle-text-left {
+            margin-left: 2px;
+        }
+
+        .toggle-text-right {
+            margin-right: 2px;
+        }
+
+        /* Hide rows based on view mode */
+        .grouped-view .flatten-only {
+            display: none;
+        }
+
+        .flattened-view .group-only {
+            display: none;
+        }
+
+        /* Hide Group column in grouped view */
+        .grouped-view th:nth-child(5),
+        .grouped-view tbody tr:not(.group-only) td:nth-child(5),
+        .grouped-view .group-cell {
+            display: none;
+        }
+
+        /* Group indicator badge in flattened view */
+        .group-badge {
+            display: inline-block;
+            padding: 1px 4px;
+            border-radius: 2px;
+            font-weight: 500;
+            background-color: rgba(110, 165, 200, 0.2);
+            color: #6ea5c8;
+            border: 1px solid rgba(110, 165, 200, 0.3);
+            font-size: 0.65rem;
+            white-space: nowrap;
+        }
+
+        /* Global view toggle at the top */
+        .global-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .global-controls h1 {
+            margin: 0;
+        }
+
+        /* Keyboard Navigation Focus Styles */
+        *:focus-visible {
+            outline: 3px solid #4db8e8;
+            outline-offset: 2px;
+        }
+
+        input:focus-visible,
+        label:focus-visible {
+            outline: 3px solid #4db8e8;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="global-controls">
+            <h1>物料清单对比 / BOM Comparison</h1>
+            
+            <div class="view-toggle">
+                <span class="view-toggle-label" id="globalViewLabel">Global View Mode:</span>
+                <label class="toggle-switch" for="globalViewToggle">
+                    <input type="checkbox" id="globalViewToggle" role="switch" aria-checked="false" aria-labelledby="globalViewLabel">
+                    <span class="toggle-slider">
+                        <span class="toggle-text toggle-text-left" aria-hidden="true">Grouped</span>
+                        <span class="toggle-text toggle-text-right" aria-hidden="true">Flat</span>
+                    </span>
+                </label>
+            </div>
+        </header>
+
+        <main role="main" class="comparison-container" id="comparisonContainer" aria-label="BOM comparison tables">
+            <!-- BOM columns will be inserted here by JavaScript -->
+        </main>
+    </div>
+
+    <script>
+        // Get IDs from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const idsParam = urlParams.get('ids');
+        console.log('[comparison.html] URL:', window.location.href);
+        console.log('[comparison.html] idsParam:', idsParam);
+        
+        let bomData = [];
+
+        // Icon definitions
+        const iconDefs = {
+            pcb: {
+                small: `<svg class="part-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="2" width="16" height="16" rx="2" stroke="#6ea5c8" stroke-width="1.5"/>
+                    <line x1="6" y1="10" x2="14" y2="10" stroke="#6ea5c8" stroke-width="1.5"/>
+                    <line x1="10" y1="6" x2="10" y2="14" stroke="#6ea5c8" stroke-width="1.5"/>
+                </svg>`,
+                large: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="10" width="60" height="60" rx="4" fill="#1b2a32" stroke="#6ea5c8" stroke-width="2"/>
+                    <circle cx="30" cy="30" r="4" fill="#6ea5c8"/>
+                    <circle cx="50" cy="30" r="4" fill="#6ea5c8"/>
+                    <circle cx="30" cy="50" r="4" fill="#6ea5c8"/>
+                    <circle cx="50" cy="50" r="4" fill="#6ea5c8"/>
+                    <path d="M20 40 L60 40 M40 20 L40 60" stroke="#6ea5c8" stroke-width="2"/>
+                    <text x="40" y="68" font-size="8" fill="#6ea5c8" text-anchor="middle">PCB</text>
+                </svg>`
+            },
+            case: {
+                small: `<svg class="part-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="4" width="14" height="12" rx="1" stroke="#6ea5c8" stroke-width="1.5"/>
+                    <line x1="3" y1="8" x2="17" y2="8" stroke="#6ea5c8" stroke-width="1"/>
+                </svg>`,
+                large: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="15" width="60" height="50" rx="3" fill="#1b2a32" stroke="#6ea5c8" stroke-width="2"/>
+                    <line x="10" y1="30" x2="70" y2="30" stroke="#6ea5c8" stroke-width="2"/>
+                    <circle cx="25" cy="45" r="3" fill="#6ea5c8"/>
+                    <circle cx="55" cy="45" r="3" fill="#6ea5c8"/>
+                    <rect x="35" y="50" width="10" height="8" fill="#6ea5c8"/>
+                    <text x="40" y="72" font-size="8" fill="#6ea5c8" text-anchor="middle">CASE</text>
+                </svg>`
+            }
+        };
+
+        // Function to calculate group totals
+        function calculateGroupTotals(group) {
+            let totalQty = 0;
+            let totalCost = 0;
+            group.items.forEach(item => {
+                totalQty += item.qty;
+                // Round each line item to 2 decimal places before summing
+                const lineTotal = Math.round((item.unitCost * item.qty) * 100) / 100;
+                totalCost = Math.round((totalCost + lineTotal) * 100) / 100;
+            });
+            return { totalQty, totalCost };
+        }
+
+        // Function to calculate BOM grand totals
+        function calculateBomTotals(bom) {
+            let totalQty = 0;
+            let totalCost = 0;
+            let itemCount = 0;
+            bom.groups.forEach(group => {
+                group.items.forEach(item => {
+                    totalQty += item.qty;
+                    // Round each line item to 2 decimal places before summing
+                    const lineTotal = Math.round((item.unitCost * item.qty) * 100) / 100;
+                    totalCost = Math.round((totalCost + lineTotal) * 100) / 100;
+                    itemCount++;
+                });
+            });
+            return { totalQty, totalCost, itemCount };
+        }
+
+        // Function to generate icon HTML
+        function generateIcon(iconType) {
+            if (!iconType || !iconDefs[iconType]) return '';
+            return `<span class="part-icon-container">
+                ${iconDefs[iconType].small}
+                <div class="part-icon-preview">
+                    ${iconDefs[iconType].large}
+                </div>
+            </span>`;
+        }
+
+        // Function to create a BOM table
+        function createBomTable(bom, index) {
+            const totals = calculateBomTotals(bom);
+            
+            let tableHTML = `
+                <div class="bom-column">
+                    <div class="bom-header">
+                        <div>
+                            <div class="sku-label">SKU: ${bom.sku}</div>
+                            <h3 class="bom-title">${bom.name}</h3>
+                        </div>
+                        <div class="view-toggle">
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="bom-view-toggle" data-index="${index}">
+                                <span class="toggle-slider">
+                                    <span class="toggle-text toggle-text-left">Group</span>
+                                    <span class="toggle-text toggle-text-right">Flat</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <table class="table table-compact grouped-view" data-index="${index}">
+                        <thead>
+                            <tr>
+                                <th class="text-center number-col">No.</th>
+                                <th class="left">Part Number</th>
+                                <th class="left">Name</th>
+                                <th class="left">Description</th>
+                                <th class="left">Group</th>
+                                <th class="left">Unit</th>
+                                <th class="text-right">Unit Cost</th>
+                                <th class="text-right">Qty</th>
+                                <th class="text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+            // Generate rows for each group
+            let rowNum = 0;
+            bom.groups.forEach(group => {
+                const groupTotals = calculateGroupTotals(group);
+                
+                // Group subtotal row
+                tableHTML += `
+                    <tr class="group-only" style="background-color: rgba(255, 255, 255, 0.05);">
+                        <td class="text-center number-col"></td>
+                        <td class="left" colspan="3"><strong>${group.name} Subtotal</strong></td>
+                        <td class="left group-cell"></td>
+                        <td class="left"></td>
+                        <td class="text-right"></td>
+                        <td class="text-right"><strong>${groupTotals.totalQty}</strong></td>
+                        <td class="text-right"><strong>$${groupTotals.totalCost.toFixed(2)}</strong></td>
+                    </tr>`;
+
+                // Item rows
+                group.items.forEach(item => {
+                    rowNum++;
+                    const totalCost = (item.unitCost * item.qty).toFixed(2);
+                    const iconHTML = item.icon ? generateIcon(item.icon) : '';
+                    
+                    tableHTML += `
+                        <tr data-group="${group.name}">
+                            <td class="text-center number-col">${rowNum}</td>
+                            <td class="left">${iconHTML}${item.partNum}</td>
+                            <td class="left">${item.name}</td>
+                            <td class="left">${item.desc}</td>
+                            <td class="left">
+                                <span class="group-only">${group.name}</span>
+                                <span class="flatten-only group-badge">${group.name}</span>
+                            </td>
+                            <td class="left">${item.unit}</td>
+                            <td class="text-right">$${item.unitCost.toFixed(2)}</td>
+                            <td class="text-right">${item.qty}</td>
+                            <td class="text-right">$${totalCost}</td>
+                        </tr>`;
+                });
+            });
+
+            tableHTML += `
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td class="text-center number-col"></td>
+                                <td class="left" colspan="3"></td>
+                                <td class="left group-cell"></td>
+                                <td class="left"><strong>Total (<span class="total-count">${totals.itemCount}</span> items)</strong></td>
+                                <td class="text-right"></td>
+                                <td class="text-right"><strong>${totals.totalQty}</strong></td>
+                                <td class="text-right"><strong>$${totals.totalCost.toFixed(2)}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>`;
+
+            return tableHTML;
+        }
+
+        // Transform API BOM data to comparison format
+        function transformBOMData(apiBom) {
+            return {
+                sku: apiBom.sku,
+                name: apiBom.name,
+                groups: (apiBom.groups || []).map(group => ({
+                    name: group.name,
+                    items: (group.items || []).map(item => ({
+                        partNum: item.part_number || '',
+                        name: item.component_name || '',
+                        desc: item.description || '',
+                        unit: item.unit || 'pcs',
+                        unitCost: parseFloat(item.unit_cost || 0),
+                        qty: parseFloat(item.quantity || 0),
+                        icon: item.icon || null
+                    }))
+                }))
+            };
+        }
+
+        // Load BOMs from API
+        async function loadBOMsFromAPI() {
+            const container = document.getElementById('comparisonContainer');
+            
+            if (!idsParam) {
+                showEmptyState();
+                return;
+            }
+            
+            container.innerHTML = '<div style="display: flex; justify-content: center; align-items: center; height: 400px; color: rgba(255,255,255,0.7);"><div style="text-align: center;"><div class="spinner" style="width: 48px; height: 48px; border-width: 4px; margin: 0 auto 1rem;"></div><p>Loading BOMs...</p></div></div>';
+            
+            try {
+                const response = await fetch(`/api/boms.php?action=compare&ids=${idsParam}`);
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.message || result.error || 'Failed to load BOMs');
+                }
+                
+                if (!result.data || result.data.length === 0) {
+                    showErrorState('No BOMs found with the provided IDs');
+                    return;
+                }
+                
+                // Transform API data to comparison format
+                bomData = result.data.map(transformBOMData);
+                
+                // Render comparison
+                renderComparison();
+                
+            } catch (error) {
+                console.error('Error loading BOMs:', error);
+                showErrorState(error.message || 'Failed to load BOMs. Please try again.');
+            }
+        }
+
+        // Show empty state when no IDs provided
+        function showEmptyState() {
+            const container = document.getElementById('comparisonContainer');
+            container.innerHTML = `
+                <div style="display: flex; justify-content: center; align-items: center; height: 400px; text-align: center;">
+                    <div>
+                        <svg width="80" height="80" style="margin-bottom: 1.5rem; opacity: 0.4;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 3H15L17 5H21C21.5523 5 22 5.44772 22 6V18C22 18.5523 21.5523 19 21 19H3C2.44772 19 2 18.5523 2 18V6C2 5.44772 2.44772 5 3 5H7L9 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <h2 style="margin: 0 0 0.5rem 0; font-weight: 600;">No BOMs Selected</h2>
+                        <p style="color: rgba(255,255,255,0.7); margin: 0 0 1.5rem 0;">Please select BOMs to compare from the BOM list.</p>
+                        <button class="btn btn-primary" onclick="window.parent.navigateTo('boms')" style="padding: 0.5rem 1.5rem; background: #0072a3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Go to BOM List</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Show error state
+        function showErrorState(message) {
+            const container = document.getElementById('comparisonContainer');
+            container.innerHTML = `
+                <div style="display: flex; justify-content: center; align-items: center; height: 400px; text-align: center;">
+                    <div>
+                        <svg width="80" height="80" style="margin-bottom: 1.5rem; color: #e62700; opacity: 0.8;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                            <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <h2 style="margin: 0 0 0.5rem 0; font-weight: 600; color: #e62700;">Error Loading BOMs</h2>
+                        <p style="color: rgba(255,255,255,0.7); margin: 0 0 1.5rem 0; max-width: 400px;">${message}</p>
+                        <button class="btn btn-secondary" onclick="window.parent.navigateTo('boms')" style="padding: 0.5rem 1.5rem; background: #324f60; color: white; border: 1px solid #495865; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Back to BOM List</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render comparison with loaded data
+        function renderComparison() {
+            const container = document.getElementById('comparisonContainer');
+            container.innerHTML = '';
+            
+            bomData.forEach((bom, index) => {
+                container.innerHTML += createBomTable(bom, index);
+            });
+
+            // Add event listeners for individual toggles
+            document.querySelectorAll('.bom-view-toggle').forEach(toggle => {
+                toggle.addEventListener('change', function() {
+                    const index = this.getAttribute('data-index');
+                    const table = document.querySelector(`table[data-index="${index}"]`);
+                    
+                    if (this.checked) {
+                        table.classList.remove('grouped-view');
+                        table.classList.add('flattened-view');
+                    } else {
+                        table.classList.remove('flattened-view');
+                        table.classList.add('grouped-view');
+                    }
+                });
+            });
+        }
+
+        // Initialize comparison view
+        function initializeComparison() {
+            const container = document.getElementById('comparisonContainer');
+            
+            // Create first 3 BOMs by default (can show up to 5)
+            const bomsToShow = bomData.slice(0, 3);
+            bomsToShow.forEach((bom, index) => {
+                container.innerHTML += createBomTable(bom, index);
+            });
+
+            // Add event listeners for individual toggles
+            document.querySelectorAll('.bom-view-toggle').forEach(toggle => {
+                toggle.addEventListener('change', function() {
+                    const index = this.getAttribute('data-index');
+                    const table = document.querySelector(`table[data-index="${index}"]`);
+                    
+                    if (this.checked) {
+                        table.classList.remove('grouped-view');
+                        table.classList.add('flattened-view');
+                    } else {
+                        table.classList.remove('flattened-view');
+                        table.classList.add('grouped-view');
+                    }
+                });
+            });
+        }
+
+        // Global view toggle
+        const globalViewToggle = document.getElementById('globalViewToggle');
+        globalViewToggle.addEventListener('change', function() {
+            const allTables = document.querySelectorAll('.bom-column table');
+            const allToggles = document.querySelectorAll('.bom-view-toggle');
+            
+            allToggles.forEach(toggle => {
+                toggle.checked = this.checked;
+            });
+            
+            if (this.checked) {
+                allTables.forEach(table => {
+                    table.classList.remove('grouped-view');
+                    table.classList.add('flattened-view');
+                });
+            } else {
+                allTables.forEach(table => {
+                    table.classList.remove('flattened-view');
+                    table.classList.add('grouped-view');
+                });
+            }
+        });
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', loadBOMsFromAPI);
+    </script>
+</body>
+</html>

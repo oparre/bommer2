@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en" cds-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOM Configuration Matrix</title>
+    
+    <!-- Clarity Design System CSS (Local) -->
+    <link rel="stylesheet" href="public/node_modules/@cds/core/global.min.css">
+    <link rel="stylesheet" href="public/node_modules/@cds/core/styles/theme.dark.min.css">
+    <link rel="stylesheet" href="public/node_modules/@clr/ui/clr-ui.min.css">
+    
+    <style>
+        /* Noto Sans SC Font */
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-weight: 300;
+            src: url('public/fonts/noto-sans-sc/NotoSansSC-Light.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-weight: 400;
+            src: url('public/fonts/noto-sans-sc/NotoSansSC-Regular.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-weight: 500;
+            src: url('public/fonts/noto-sans-sc/NotoSansSC-Medium.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-weight: 600;
+            src: url('public/fonts/noto-sans-sc/NotoSansSC-SemiBold.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-weight: 700;
+            src: url('public/fonts/noto-sans-sc/NotoSansSC-Bold.woff2') format('woff2');
+        }
+
+        /* Global Font - Apply Noto Sans SC to ALL elements */
+        * {
+            font-family: 'Noto Sans SC', sans-serif !important;
+        }
+
+        body {
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        /* Keyboard Navigation Focus Styles */
+        *:focus-visible {
+            outline: 3px solid #4db8e8;
+            outline-offset: 2px;
+        }
+
+        input:focus-visible,
+        label:focus-visible,
+        button:focus-visible {
+            outline: 3px solid #4db8e8;
+            outline-offset: 2px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Header Controls */
+        .matrix-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .matrix-header h1 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.75rem;
+            align-items: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-badge {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+
+        .legend-unique {
+            background-color: rgba(255, 102, 0, 0.25);
+            border: 1px solid rgba(255, 102, 0, 0.5);
+        }
+
+        .legend-qty-diff {
+            background-color: rgba(255, 204, 0, 0.2);
+            border: 1px solid rgba(255, 204, 0, 0.5);
+        }
+
+        .legend-cost-diff {
+            background-color: rgba(102, 153, 255, 0.2);
+            border: 1px solid rgba(102, 153, 255, 0.5);
+        }
+
+        .legend-common {
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Matrix Table */
+        .matrix-table-container {
+            overflow-x: auto;
+            margin-bottom: 2rem;
+        }
+
+        .matrix-table {
+            width: 100%;
+            font-size: 0.7rem;
+            table-layout: auto;
+            border-collapse: collapse;
+        }
+
+        .matrix-table th,
+        .matrix-table td {
+            padding: 0.4rem 0.3rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .matrix-table th {
+            font-weight: 600;
+            font-size: 0.65rem;
+            background-color: rgba(255, 255, 255, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        /* Fixed left columns */
+        .matrix-table th:nth-child(1),
+        .matrix-table td:nth-child(1) {
+            width: min-content;
+            text-align: center;
+            background-color: var(--clr-datagrid-popover-bg-color, #21333b);
+            position: sticky;
+            left: 0;
+            z-index: 5;
+        }
+
+        .matrix-table th:nth-child(2),
+        .matrix-table td:nth-child(2) {
+            min-width: 120px;
+            background-color: var(--clr-datagrid-popover-bg-color, #21333b);
+            position: sticky;
+            left: 40px;
+            z-index: 5;
+        }
+
+        .matrix-table th:nth-child(3),
+        .matrix-table td:nth-child(3) {
+            min-width: 100px;
+            background-color: var(--clr-datagrid-popover-bg-color, #21333b);
+            position: sticky;
+            left: 160px;
+            z-index: 5;
+        }
+
+        .matrix-table th:nth-child(4),
+        .matrix-table td:nth-child(4) {
+            min-width: 200px;
+            background-color: var(--clr-datagrid-popover-bg-color, #21333b);
+            position: sticky;
+            left: 260px;
+            z-index: 5;
+        }
+
+        /* BOM SKU columns */
+        .sku-col {
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .sku-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .sku-code {
+            font-weight: 600;
+            color: #6ea5c8;
+        }
+
+        .sku-name {
+            font-size: 0.6rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Hover Effects */
+        .matrix-table tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+        }
+
+        /* Difference Highlighting */
+        .cell-unique {
+            background-color: rgba(255, 102, 0, 0.25);
+            border: 1px solid rgba(255, 102, 0, 0.5);
+        }
+
+        .cell-qty-diff {
+            background-color: rgba(255, 204, 0, 0.2);
+            border: 1px solid rgba(255, 204, 0, 0.5);
+        }
+
+        .cell-cost-diff {
+            background-color: rgba(102, 153, 255, 0.2);
+            border: 1px solid rgba(102, 153, 255, 0.5);
+        }
+
+        .cell-empty {
+            background-color: rgba(255, 255, 255, 0.02);
+            color: rgba(255, 255, 255, 0.3);
+            text-align: center;
+        }
+
+        /* Cell content display */
+        .cell-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.5rem;
+            min-height: fit-content;
+        }
+
+        .cell-qty {
+            font-weight: 500;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .cell-costs {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+            align-items: flex-start;
+        }
+
+        .cell-cost {
+            font-size: 0.6rem;
+            color: rgba(255, 255, 255, 0.7);
+            white-space: nowrap;
+        }
+
+        /* Number column styling */
+        .number-col {
+            width: min-content;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            padding-left: 0.3rem !important;
+            padding-right: 0.3rem !important;
+        }
+
+        /* Group headers */
+        .group-header-row {
+            background-color: rgba(255, 255, 255, 0.08);
+            font-weight: 600;
+        }
+
+        .group-header-row td {
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        /* Summary Statistics */
+        .summary-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .summary-card {
+            padding: 1rem;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .summary-card h3 {
+            margin: 0 0 0.75rem 0;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #6ea5c8;
+        }
+
+        .summary-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.3rem 0;
+            font-size: 0.75rem;
+        }
+
+        .summary-label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .summary-value {
+            font-weight: 500;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="matrix-header">
+            <h1>BOM 配置矩阵 / Configuration Matrix</h1>
+            
+            <nav class="header-controls" aria-label="Legend">
+                <div class="legend" role="list" aria-label="Matrix legend">
+                    <div class="legend-item" role="listitem">
+                        <div class="legend-badge legend-unique" aria-hidden="true"></div>
+                        <span>Unique Part</span>
+                    </div>
+                    <div class="legend-item" role="listitem">
+                        <div class="legend-badge legend-qty-diff" aria-hidden="true"></div>
+                        <span>Qty Difference</span>
+                    </div>
+                    <div class="legend-item" role="listitem">
+                        <div class="legend-badge legend-cost-diff" aria-hidden="true"></div>
+                        <span>Cost Difference</span>
+                    </div>
+                    <div class="legend-item" role="listitem">
+                        <div class="legend-badge legend-common" aria-hidden="true"></div>
+                        <span>Common</span>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <main role="main">
+        <div class="matrix-table-container">
+            <table class="matrix-table" id="matrixTable" aria-label="BOM configuration matrix">
+                <thead id="matrixHead">
+                    <!-- Will be populated by JavaScript -->
+                </thead>
+                <tbody id="matrixBody">
+                    <!-- Will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <section class="summary-section" id="summarySection" aria-label="Summary statistics">
+            <!-- Summary cards will be populated by JavaScript -->
+        </section>
+        </main>
+    </div>
+
+    <script>
+        // ========================================================================
+        // Matrix View - Real Data Implementation
+        // ========================================================================
+
+        let matrixData = null; // Store loaded data globally
+
+        // Get URL parameters
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                scope: params.get('scope'), // 'project' or 'assembly'
+                id: params.get('id')        // project_id or assembly_id
+            };
+        }
+
+        // Show loading state
+        function showLoading() {
+            const container = document.querySelector('.container');
+            const loadingHTML = '<div style="text-align: center; padding: 4rem;"><div class="spinner" style="border: 3px solid rgba(255,255,255,0.1); border-radius: 50%; border-top: 3px solid #6ea5c8; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div><p style="color: rgba(255,255,255,0.7);">Loading matrix data...</p></div><style>@keyframes spin {0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); }}</style>';
+            container.innerHTML = loadingHTML;
+        }
+
+        // Show error message
+        function showError(message, showBackButton = true) {
+            const container = document.querySelector('.container');
+            let backButtonHTML = '';
+            if (showBackButton) {
+                backButtonHTML = '<button class="btn btn-primary" onclick="window.parent.history.back()" style="margin-top: 1rem; padding: 0.5rem 1rem; background-color: #6ea5c8; border: none; border-radius: 4px; color: white; cursor: pointer;">← Back</button>';
+            }
+            
+            container.innerHTML = '<div style="text-align: center; padding: 4rem;"><div style="font-size: 3rem; color: rgba(255,102,0,0.5); margin-bottom: 1rem;">⚠</div><h2 style="color: rgba(255,255,255,0.9); margin-bottom: 0.5rem;">Unable to Load Matrix</h2><p style="color: rgba(255,255,255,0.7);">' + message + '</p>' + backButtonHTML + '</div>';
+        }
+
+        // Load matrix data from API
+        async function loadMatrixData() {
+            const { scope, id } = getUrlParams();
+            
+            if (!scope || !id) {
+                showError('Missing required parameters: scope and id', false);
+                return;
+            }
+            
+            if (!['project', 'assembly'].includes(scope)) {
+                showError('Invalid scope parameter. Must be "project" or "assembly"', false);
+                return;
+            }
+            
+            try {
+                showLoading();
+                
+                // Call API
+                const response = await fetch(`/api/boms.php?action=matrix&scope=${scope}&id=${id}`, {
+                    credentials: 'same-origin'
+                });
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    showError(result.error || 'Failed to load matrix data');
+                    return;
+                }
+                
+                matrixData = result.data;
+                
+                // Render the matrix
+                renderMatrixView();
+                
+            } catch (error) {
+                console.error('Matrix loading error:', error);
+                showError('Network error: Unable to connect to server');
+            }
+        }
+
+        // Main render function
+        function renderMatrixView() {
+            // Restore the original HTML structure
+            const container = document.querySelector('.container');
+            container.innerHTML = `
+                <header class="matrix-header">
+                    <div>
+                        <h1>BOM 配置矩阵 / Configuration Matrix</h1>
+                        <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0.5rem 0 0 0;">
+                            ${matrixData.scope === 'project' ? 'Project' : 'Assembly'}: <strong>${matrixData.scope_name}</strong>
+                        </p>
+                    </div>
+                    
+                    <nav class="header-controls" aria-label="Legend">
+                        <div class="legend" role="list" aria-label="Matrix legend">
+                            <div class="legend-item" role="listitem">
+                                <div class="legend-badge legend-unique" aria-hidden="true"></div>
+                                <span>Unique Part</span>
+                            </div>
+                            <div class="legend-item" role="listitem">
+                                <div class="legend-badge legend-qty-diff" aria-hidden="true"></div>
+                                <span>Qty Difference</span>
+                            </div>
+                            <div class="legend-item" role="listitem">
+                                <div class="legend-badge legend-cost-diff" aria-hidden="true"></div>
+                                <span>Cost Difference</span>
+                            </div>
+                            <div class="legend-item" role="listitem">
+                                <div class="legend-badge legend-common" aria-hidden="true"></div>
+                                <span>Common</span>
+                            </div>
+                        </div>
+                    </nav>
+                </header>
+
+                <main role="main">
+                    <div class="matrix-table-container">
+                        <table class="matrix-table" id="matrixTable" aria-label="BOM configuration matrix">
+                            <thead id="matrixHead"></thead>
+                            <tbody id="matrixBody"></tbody>
+                        </table>
+                    </div>
+
+                    <section class="summary-section" id="summarySection" aria-label="Summary statistics"></section>
+                </main>
+            `;
+            
+            // Now render table and summary
+            renderMatrix();
+            renderSummary();
+        }
+
+        // Render matrix table
+        function renderMatrix() {
+            const components = matrixData.components;
+            const boms = matrixData.boms;
+            
+            // Group components by category
+            const groupedComponents = {};
+            components.forEach(comp => {
+                const groupName = comp.group || 'Ungrouped';
+                if (!groupedComponents[groupName]) {
+                    groupedComponents[groupName] = [];
+                }
+                groupedComponents[groupName].push(comp);
+            });
+            
+            // Render table header
+            const thead = document.getElementById('matrixHead');
+            let headerHTML = `
+                <tr>
+                    <th class="number-col">No.</th>
+                    <th>Part Number</th>
+                    <th>Name</th>
+                    <th>Description</th>`;
+            
+            boms.forEach(bom => {
+                const statusBadge = getStatusBadge(bom.status);
+                headerHTML += `
+                    <th class="sku-col" style="cursor: pointer;" 
+                        data-bom-id="${bom.id}" 
+                        onclick="showBOMPreview(${bom.id})" 
+                        title="Click to preview BOM details">
+                        <div class="sku-header">
+                            <div class="sku-code">${bom.sku}</div>
+                            <div class="sku-name">${bom.name}</div>
+                            <div style="margin-top: 0.2rem;">${statusBadge}</div>
+                            ${matrixData.scope === 'assembly' ? `<div style="font-size: 0.55rem; color: rgba(255,255,255,0.5); margin-top: 0.2rem;">${bom.project_name || ''}</div>` : ''}
+                        </div>
+                    </th>`;
+            });
+            
+            headerHTML += `</tr>`;
+            thead.innerHTML = headerHTML;
+            
+            // Render table body
+            const tbody = document.getElementById('matrixBody');
+            let bodyHTML = '';
+            let rowNum = 0;
+            
+            Object.keys(groupedComponents).forEach(groupName => {
+                // Group header row
+                bodyHTML += `
+                    <tr class="group-header-row">
+                        <td class="number-col"></td>
+                        <td colspan="${3 + boms.length}"><strong>${groupName}</strong></td>
+                    </tr>`;
+                
+                groupedComponents[groupName].forEach(component => {
+                    rowNum++;
+                    
+                    bodyHTML += `
+                        <tr>
+                            <td class="number-col">${rowNum}</td>
+                            <td title="${component.manufacturer || ''} ${component.mpn || ''}">${component.part_number}</td>
+                            <td>${component.name}</td>
+                            <td>${component.description}</td>`;
+                    
+                    boms.forEach(bom => {
+                        const occurrence = component.occurrences[bom.id];
+                        
+                        if (!occurrence) {
+                            bodyHTML += `<td class="cell-empty">—</td>`;
+                        } else {
+                            const cellClass = getCellClass(occurrence.difference_type);
+                            const tooltipParts = [
+                                component.part_number,
+                                `Qty: ${occurrence.qty} ${component.unit}`,
+                                `Unit Cost: $${occurrence.unit_cost}`,
+                                `Total: $${occurrence.total_cost}`
+                            ];
+                            if (occurrence.notes) {
+                                tooltipParts.push(`Notes: ${occurrence.notes}`);
+                            }
+                            const tooltipText = tooltipParts.join(' | ');
+                            
+                            bodyHTML += `
+                                <td class="${cellClass}" title="${tooltipText}">
+                                    <div class="cell-content">
+                                        <div class="cell-costs">
+                                            <div class="cell-cost">$${occurrence.unit_cost.toFixed(2)} / ${component.unit}</div>
+                                            <div class="cell-cost">Total: $${occurrence.total_cost.toFixed(2)}</div>
+                                        </div>
+                                        <div class="cell-qty">Qty: ${occurrence.qty}</div>
+                                    </div>
+                                </td>`;
+                        }
+                    });
+                    
+                    bodyHTML += `</tr>`;
+                });
+            });
+            
+            tbody.innerHTML = bodyHTML;
+        }
+
+        // Helper function to get cell CSS class based on difference type
+        function getCellClass(diffType) {
+            switch (diffType) {
+                case 'unique':
+                    return 'cell-unique';
+                case 'qty-diff':
+                case 'qty-cost-diff':
+                    return 'cell-qty-diff';
+                case 'cost-diff':
+                    return 'cell-cost-diff';
+                default:
+                    return '';
+            }
+        }
+
+        // Helper function to get status badge HTML
+        function getStatusBadge(status) {
+            const statusColors = {
+                'draft': '#ffc107',
+                'approved': '#28a745',
+                'obsolete': '#6c757d',
+                'invalidated': '#dc3545'
+            };
+            const color = statusColors[status] || '#6c757d';
+            return `<span style="display: inline-block; padding: 0.1rem 0.4rem; font-size: 0.55rem; background-color: ${color}; color: white; border-radius: 3px; text-transform: uppercase;">${status}</span>`;
+        }
+
+        // Show BOM preview modal (to be implemented)
+        function showBOMPreview(bomId) {
+            // For now, navigate to BOM detail in parent window
+            if (window.parent && window.parent.AppRouter) {
+                window.parent.AppRouter.navigateTo(`boms/${bomId}`);
+            } else {
+                // Fallback: open in current window
+                window.location.href = `/app.php#/boms/${bomId}`;
+            }
+        }
+
+        // Generate summary statistics
+        function renderSummary() {
+            const summarySection = document.getElementById('summarySection');
+            let summaryHTML = '';
+            
+            matrixData.boms.forEach(bom => {
+                const stats = matrixData.summary[bom.id];
+                if (!stats) return;
+                
+                summaryHTML += `
+                    <div class="summary-card">
+                        <h3>${bom.sku} - ${bom.name}</h3>
+                        <div class="summary-stat">
+                            <span class="summary-label">Total Parts:</span>
+                            <span class="summary-value">${stats.total_parts}</span>
+                        </div>
+                        <div class="summary-stat">
+                            <span class="summary-label">Total Quantity:</span>
+                            <span class="summary-value">${stats.total_qty}</span>
+                        </div>
+                        <div class="summary-stat">
+                            <span class="summary-label">Total Cost:</span>
+                            <span class="summary-value">$${stats.total_cost.toFixed(2)}</span>
+                        </div>
+                        <div class="summary-stat">
+                            <span class="summary-label">Unique Parts:</span>
+                            <span class="summary-value">${stats.unique_parts}</span>
+                        </div>
+                    </div>`;
+            });
+            
+            summarySection.innerHTML = summaryHTML;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMatrixData();
+        });
+    </script>
+</body>
+</html>
