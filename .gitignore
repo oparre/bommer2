@@ -1,0 +1,25 @@
+# Dependencies - install via npm install
+/public/node_modules/
+/public/package-lock.json
+
+# Font files - download via download-fonts.ps1
+/public/fonts/noto-sans-sc/*.woff2
+/public/fonts/noto-sans-sc/*.woff
+
+# Qoder IDE files
+/.qoder/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
