@@ -214,7 +214,7 @@
 <div class="shrink-0 bg-clr-surface border-b border-clr-border flex items-center justify-between px-6 py-3 gap-6 z-30">
 <div class="flex flex-col gap-1 min-w-[260px]">
 <div class="flex items-baseline gap-3">
-<h2 class="text-clr-text-main text-lg font-medium leading-none">Alpha-X1 Assembly</h2>
+<h2 class="text-clr-text-main text-lg font-medium leading-none">Alpha-X1 Product ID</h2>
 <span class="px-1.5 py-0.5 rounded-sm text-[10px] font-bold bg-clr-border text-clr-text-muted uppercase tracking-wider border border-clr-border">PRJ-2024-88</span>
 </div>
 <div class="flex items-center gap-3 text-xs text-clr-text-muted mt-1">
@@ -681,7 +681,7 @@
                 button.addEventListener('click', function (e) {
                     e.preventDefault();
                     const bomState = {
-                        assemblyName: document.querySelector('h2.text-clr-text-main.text-lg.font-medium.leading-none')?.textContent || '',
+                        productName: document.querySelector('h2.text-clr-text-main.text-lg.font-medium.leading-none')?.textContent || '',
                         projectCode: document.querySelector('span.bg-clr-border.text-clr-text-muted')?.textContent || '',
                         totalParts: totalPartsEl ? totalPartsEl.textContent : '',
                         grandTotal: grandTotalEl ? grandTotalEl.textContent : '',

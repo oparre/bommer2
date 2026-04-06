@@ -258,35 +258,35 @@ class APIService {
     }
 
     // ========================================================================
-    // Assemblies API
+    // Products API
     // ========================================================================
 
-    async listAssemblies(filters = {}) {
+    async listProducts(filters = {}) {
         const params = new URLSearchParams(filters).toString();
-        const endpoint = params ? `assemblies.php?${params}` : 'assemblies.php';
+        const endpoint = params ? `products.php?${params}` : 'products.php';
         return this.request(endpoint);
     }
 
-    async getAssembly(id) {
-        return this.request(`assemblies.php?id=${id}`);
+    async getProduct(id) {
+        return this.request(`products.php?id=${id}`);
     }
 
-    async createAssembly(data) {
-        return this.request('assemblies.php', {
+    async createProduct(data) {
+        return this.request('products.php', {
             method: 'POST',
             body: JSON.stringify(data),
         });
     }
 
-    async updateAssembly(data) {
-        return this.request('assemblies.php', {
+    async updateProduct(data) {
+        return this.request('products.php', {
             method: 'PUT',
             body: JSON.stringify(data),
         });
     }
 
-    async deleteAssembly(id) {
-        return this.request(`assemblies.php?id=${id}`, {
+    async deleteProduct(id) {
+        return this.request(`products.php?id=${id}`, {
             method: 'DELETE',
         });
     }

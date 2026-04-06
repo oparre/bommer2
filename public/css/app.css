@@ -108,8 +108,8 @@ body {
 .app-header {
     display: flex;
     align-items: center;
-    gap: 2rem;
-    padding: 0.75rem 1.5rem;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
     background-color: var(--clr-surface);
     border-bottom: 1px solid var(--clr-border);
     flex-shrink: 0;
@@ -120,6 +120,36 @@ body {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+}
+
+/* JS-driven logo collapse: hide text when logo-collapsed class is present */
+.app-header.logo-collapsed .app-logo > div:nth-child(2) {
+    display: none;
+}
+
+.app-header.logo-collapsed .app-logo {
+    gap: 0;
+}
+
+/* Responsive logo: hide text on smaller screens (CSS fallback) */
+@media (max-width: 1024px) {
+    .app-logo > div:nth-child(2) {
+        display: none;
+    }
+
+    .app-logo {
+        gap: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-logo > div:nth-child(2) {
+        display: none;
+    }
+
+    .app-logo {
+        gap: 0;
+    }
 }
 
 .logo-icon {
@@ -153,7 +183,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    flex: 1;
+    flex-shrink: 0;
 }
 
 .header-nav-item {
@@ -206,16 +236,20 @@ body {
     width: 1px;
     height: 2rem;
     background-color: var(--clr-border);
-    margin: 0 0.5rem;
+    margin: 0 0.25rem;
 }
 
 .header-search {
     flex: 1;
-    max-width: 400px;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    margin: 0 0.25rem;
 }
 
 .search-input {
     width: 100%;
+    min-width: 0;
     padding: 0.5rem 1rem;
     background-color: var(--clr-app-bg);
     border: 2px solid var(--clr-border);
@@ -237,8 +271,54 @@ body {
 
 .header-actions {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
     align-items: center;
+}
+
+.header-user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--clr-text-main);
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.5rem;
+}
+
+.header-user-info clr-icon {
+    --color: var(--clr-text-secondary);
+    width: 1.125rem !important;
+    height: 1.125rem !important;
+}
+
+/* When header is in compact mode, hide user info and logout text */
+.app-header.header-compact .header-user-info {
+    display: none;
+}
+
+.app-header.header-compact .header-logout-text {
+    display: none;
+}
+
+/* Responsive fallback: hide user info on smaller screens when JS isn't available */
+@media (max-width: 1024px) {
+    .app-header .header-user-info {
+        display: none;
+    }
+
+    .app-header .header-logout-text {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-header .header-user-info {
+        display: none;
+    }
+
+    .app-header .header-logout-text {
+        display: none;
+    }
 }
 
 .header-actions .p6 {

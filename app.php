@@ -60,7 +60,7 @@ requireLogin('/auth/login.php');
                 <a class="header-nav-item" onclick="navigateTo('optionals')" data-route="optionals" title="Optionals" role="button" aria-label="Project Optionals" tabindex="0">
                     <clr-icon shape="bundle" aria-hidden="true"></clr-icon>
                 </a>
-                <a class="header-nav-item" onclick="navigateTo('assemblies')" data-route="assemblies" title="Assemblies" role="button" aria-label="Assemblies" tabindex="0">
+                <a class="header-nav-item" onclick="navigateTo('products')" data-route="products" title="Product IDs" role="button" aria-label="Product IDs" tabindex="0">
                     <clr-icon shape="wrench" aria-hidden="true"></clr-icon>
                 </a>
                 <a class="header-nav-item" onclick="navigateTo('components')" data-route="components" title="Components" role="button" aria-label="Components" tabindex="0">
@@ -78,17 +78,17 @@ requireLogin('/auth/login.php');
             </nav>
 
             <div class="header-search" role="search">
-                <input type="text" class="search-input" placeholder="Search BOMs, Projects, Assemblies, Components, Optionals..." id="globalSearch" aria-label="Search all entities">
+                <input type="text" class="search-input" placeholder="Search BOMs, Projects, Products, Components, Optionals..." id="globalSearch" aria-label="Search all entities">
             </div>
 
             <div class="header-actions" role="group" aria-label="User actions">
-                <div aria-label="Current user: <?php echo htmlspecialchars(getCurrentUsername(), ENT_QUOTES, 'UTF-8'); ?>">
-                    <clr-icon shape="user" aria-hidden="true"></clr-icon>
-                    <?php echo htmlspecialchars(getCurrentUsername(), ENT_QUOTES, 'UTF-8'); ?>
-</div>
-                <a href="/auth/logout.php" class="btn btn-sm btn-link" aria-label="Logout from application">
-                    <clr-icon shape="logout" aria-hidden="true"></clr-icon>
-                    Logout
+                <div class="header-user-info" aria-label="Current user: <?php echo htmlspecialchars(getCurrentUsername(), ENT_QUOTES, 'UTF-8'); ?>">
+                    <clr-icon shape="user"></clr-icon>
+                    <span class="header-username"><?php echo htmlspecialchars(getCurrentUsername(), ENT_QUOTES, 'UTF-8'); ?></span>
+                </div>
+                <a href="/auth/logout.php" class="btn btn-sm btn-link" title="Logout" aria-label="Logout">
+                    <clr-icon shape="logout"></clr-icon>
+                    <span class="header-logout-text">Logout</span>
                 </a>
             </div>
         </header>

@@ -64,8 +64,8 @@ After completing the setup, verify it worked:
    - remember_tokens
    - csrf_tokens
    - projects
-   - assemblies
-   - assembly_projects
+   - products
+   - product_projects
    - components
    - boms
    - bom_revisions

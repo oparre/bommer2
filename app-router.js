@@ -5,7 +5,7 @@ const AppRouter = {
     data: {
         boms: [],
         projects: [],
-        assemblies: [],
+        products: [],
         components: [],
         auditLogs: []
     },
@@ -36,9 +36,15 @@ const AppRouter = {
             
             // Load initial route FIRST
             await this.navigateTo('dashboard');
-            
-            // Check for autosave AFTER dashboard loads to avoid navigation conflicts
-            await this.checkAndResumeAutosave();
+
+            // Deep-link from external tools (e.g. mindmap): /app.php#boms/5
+            const deepLink = window.location.hash.replace('#', '').trim();
+            if (deepLink) {
+                await this.navigateTo(deepLink);
+            } else {
+                // Check for autosave AFTER dashboard loads to avoid navigation conflicts
+                await this.checkAndResumeAutosave();
+            }
             
             // Setup global search
             const searchInput = document.getElementById('globalSearch');
@@ -49,7 +55,38 @@ const AppRouter = {
                     }
                 });
             }
-            
+
+            // Setup dynamic logo collapse based on search input width
+            const header = document.querySelector('.app-header');
+            const searchContainer = document.querySelector('.header-search');
+
+            if (header && searchContainer) {
+                function updateLogoVisibility() {
+                    // Always measure from full logo state
+                    header.classList.remove('logo-collapsed');
+                    header.classList.remove('header-compact');
+                    // Force reflow to get accurate width measurement
+                    void header.offsetHeight;
+                    const searchWidth = searchContainer.getBoundingClientRect().width;
+                    if (searchWidth < 200) {
+                        header.classList.add('logo-collapsed');
+                        header.classList.add('header-compact'); // also compact when logo collapses
+                    } else if (searchWidth < 400) {
+                        header.classList.add('header-compact');
+                    }
+                }
+
+                // Check on load
+                updateLogoVisibility();
+
+                // Check on window resize (debounced)
+                let resizeTimeout;
+                window.addEventListener('resize', () => {
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(updateLogoVisibility, 100);
+                });
+            }
+
             // Setup event delegation for Change Status buttons
             const self = this; // Preserve AppRouter context
             document.addEventListener('click', (e) => {
@@ -168,32 +205,32 @@ const AppRouter = {
                     self.importDevappProjects();
                 }
 
-                // ====== Assembly Management Actions ======
+                // ====== Product Management Actions ======
 
-                // Handle create assembly
-                const createAssemblyBtn = e.target.closest('[data-action="create-assembly"]');
-                if (createAssemblyBtn) {
-                    self.showAssemblyModal();
+                // Handle create product
+                const createProductBtn = e.target.closest('[data-action="create-product"]');
+                if (createProductBtn) {
+                    self.showProductModal();
                 }
 
-                // Handle edit assembly
-                const editAssemblyBtn = e.target.closest('[data-action="edit-assembly"]');
-                if (editAssemblyBtn) {
-                    const assemblyId = parseInt(editAssemblyBtn.dataset.assemblyId);
-                    // Fetch full assembly data with projects before opening modal
-                    self.editAssembly(assemblyId);
+                // Handle edit product
+                const editProductBtn = e.target.closest('[data-action="edit-product"]');
+                if (editProductBtn) {
+                    const productId = parseInt(editProductBtn.dataset.productId);
+                    // Fetch full product data with projects before opening modal
+                    self.editProduct(productId);
                 }
 
-                // Handle close assembly modal
-                const closeAssemblyModalBtn = e.target.closest('[data-action="close-assembly-modal"]');
-                if (closeAssemblyModalBtn) {
-                    self.closeAssemblyModal();
+                // Handle close product modal
+                const closeProductModalBtn = e.target.closest('[data-action="close-product-modal"]');
+                if (closeProductModalBtn) {
+                    self.closeProductModal();
                 }
 
-                // Handle save assembly
-                const saveAssemblyBtn = e.target.closest('[data-action="save-assembly"]');
-                if (saveAssemblyBtn) {
-                    self.saveAssembly();
+                // Handle save product
+                const saveProductBtn = e.target.closest('[data-action="save-product"]');
+                if (saveProductBtn) {
+                    self.saveProduct();
                 }
 
                 // ====== Project Optionals Actions ======
@@ -337,16 +374,16 @@ const AppRouter = {
     
     async loadAllData() {
         try {
-            const [bomsResp, projectsResp, assembliesResp, componentsResp] = await Promise.all([
+            const [bomsResp, projectsResp, productsResp, componentsResp] = await Promise.all([
                 API.listBOMs(),
                 API.listProjects(),
-                API.listAssemblies(),
+                API.listProducts(),
                 API.listComponents({ source: 'bommer' }) // Load only Bommer components by default
             ]);
             
             this.data.boms = bomsResp.data || [];
             this.data.projects = projectsResp.data || [];
-            this.data.assemblies = assembliesResp.data || [];
+            this.data.products = productsResp.data || [];
             this.data.components = componentsResp.data || [];
         } catch (error) {
             this.logError('Error loading data', error);
@@ -562,14 +599,14 @@ const AppRouter = {
                 const projectId = parseInt(route.split('/')[1]);
                 const projectResp = await API.getProjectWithOptionals(projectId);
                 content.innerHTML = Pages.renderProjectDetail(projectResp.data);
-            } else if (route === 'assemblies') {
-                const assembliesResp = await API.listAssemblies();
-                this.data.assemblies = assembliesResp.data || [];
-                content.innerHTML = await Pages.renderAssemblies(this.data.assemblies);
-            } else if (route.startsWith('assemblies/')) {
-                const assemblyId = parseInt(route.split('/')[1]);
-                const assemblyResp = await API.getAssembly(assemblyId);
-                content.innerHTML = Pages.renderAssemblyDetail(assemblyResp.data);
+            } else if (route === 'products') {
+                const productsResp = await API.listProducts();
+                this.data.products = productsResp.data || [];
+                content.innerHTML = await Pages.renderProducts(this.data.products);
+            } else if (route.startsWith('products/')) {
+                const productId = parseInt(route.split('/')[1]);
+                const productResp = await API.getProduct(productId);
+                content.innerHTML = Pages.renderProductDetail(productResp.data);
             } else if (route === 'components') {
                 // Check for source filter in URL hash (e.g., #components?source=all)
                 const urlParams = window.location.hash.includes('?') ? 
@@ -659,10 +696,10 @@ const AppRouter = {
         if (!query.trim()) return;
         
         try {
-            const [bomsResp, projectsResp, assembliesResp, componentsResp, optionalsResp] = await Promise.all([
+            const [bomsResp, projectsResp, productsResp, componentsResp, optionalsResp] = await Promise.all([
                 API.listBOMs({ search: query }),
                 API.listProjects({ search: query }),
-                API.listAssemblies({ search: query }),
+                API.listProducts({ search: query }),
                 API.listComponents({ search: query, source: 'all', limit: 50 }), // Search both sources, limit results
                 API.listAllOptionals({ search: query })
             ]);
@@ -670,7 +707,7 @@ const AppRouter = {
             const results = {
                 boms: bomsResp.data || [],
                 projects: projectsResp.data || [],
-                assemblies: assembliesResp.data || [],
+                products: productsResp.data || [],
                 components: componentsResp.data || [],
                 optionals: optionalsResp.data || []
             };
@@ -2097,73 +2134,73 @@ const AppRouter = {
         }
     },
 
-    // ========== Project Management Methods ==========
+    // ========== Product Management Methods ==========
 
-    async editAssembly(assemblyId) {
+    async editProduct(productId) {
         try {
-            // Fetch full assembly data including projects
-            const assemblyResp = await API.getAssembly(assemblyId);
-            if (assemblyResp.success && assemblyResp.data) {
-                this.showAssemblyModal(assemblyResp.data);
+            // Fetch full product data including projects
+            const productResp = await API.getProduct(productId);
+            if (productResp.success && productResp.data) {
+                this.showProductModal(productResp.data);
             } else {
-                alert('Failed to load assembly data');
+                alert('Failed to load product data');
             }
         } catch (error) {
-            this.logError('Failed to load assembly for editing', error);
-            alert('Failed to load assembly. Please try again.');
+            this.logError('Failed to load product for editing', error);
+            alert('Failed to load product. Please try again.');
         }
     },
 
-    showAssemblyModal(assembly = null) {
-        const isEdit = !!assembly;
+    showProductModal(product = null) {
+        const isEdit = !!product;
         const modal = document.createElement('div');
         modal.className = 'modal modal-open';
         modal.innerHTML = `
             <div class="modal-dialog" role="dialog" style="max-width: 800px;">
                 <div class="modal-content">
-                    <button class="close-btn" data-action="close-assembly-modal" aria-label="Close">
+                    <button class="close-btn" data-action="close-product-modal" aria-label="Close">
                         <clr-icon shape="close"></clr-icon>
                     </button>
                     <div class="modal-header">
-                        <h3 class="modal-title">${isEdit ? 'Edit Assembly' : 'Create New Assembly'}</h3>
+                        <h3 class="modal-title">${isEdit ? 'Edit Product ID' : 'Create New Product ID'}</h3>
                     </div>
                     <div class="modal-body">
-                        ${isEdit ? `<input type="hidden" id="assemblyId" value="${assembly.id}">` : ''}
+                        ${isEdit ? `<input type="hidden" id="productId" value="${product.id}">` : ''}
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                             <div class="clr-form-control">
-                                <label class="clr-control-label" for="assemblyCode">Assembly Code *</label>
-                                <input type="text" id="assemblyCode" class="clr-input" required placeholder="e.g., ASM-2026-001" style="width: 100%;" value="${isEdit ? assembly.code : ''}">
+                                <label class="clr-control-label" for="productCode">Product Code *</label>
+                                <input type="text" id="productCode" class="clr-input" required placeholder="e.g., PRD-2026-001" style="width: 100%;" value="${isEdit ? product.code : ''}">
                             </div>
                             
                             <div class="clr-form-control">
-                                <label class="clr-control-label" for="assemblyCategory">Category</label>
-                                <input type="text" id="assemblyCategory" class="clr-input" placeholder="e.g., Electronics" style="width: 100%;" value="${isEdit ? assembly.category || '' : ''}">
+                                <label class="clr-control-label" for="productCategory">Category</label>
+                                <input type="text" id="productCategory" class="clr-input" placeholder="e.g., Electronics" style="width: 100%;" value="${isEdit ? product.category || '' : ''}">
                             </div>
                         </div>
                         
                         <div class="clr-form-control" style="margin-bottom: 1rem;">
-                            <label class="clr-control-label" for="assemblyName">Assembly Name *</label>
-                            <input type="text" id="assemblyName" class="clr-input" required placeholder="e.g., Main Control Panel" style="width: 100%;" value="${isEdit ? assembly.name : ''}">
+                            <label class="clr-control-label" for="productName">Product Name *</label>
+                            <input type="text" id="productName" class="clr-input" required placeholder="e.g., Main Control Panel" style="width: 100%;" value="${isEdit ? product.name : ''}">
                         </div>
                         
                         <div class="clr-form-control" style="margin-bottom: 1.5rem;">
-                            <label class="clr-control-label" for="assemblyDescription">Description</label>
-                            <textarea id="assemblyDescription" class="clr-textarea" rows="2" placeholder="Assembly details and purpose" style="width: 100%;">${isEdit ? assembly.description || '' : ''}</textarea>
+                            <label class="clr-control-label" for="productDescription">Description</label>
+                            <textarea id="productDescription" class="clr-textarea" rows="2" placeholder="Product details and purpose" style="width: 100%;">${isEdit ? product.description || '' : ''}</textarea>
                         </div>
 
                         <div class="clr-form-control" style="margin-bottom: 1rem;">
-                            <label class="clr-control-label" for="assemblyProjectsFilter" style="font-weight: 600; font-size: 1rem;">Select BOMs (SKUs) for this Assembly</label>
+                            <label class="clr-control-label" for="productProjectsFilter" style="font-weight: 600; font-size: 1rem;">Select BOMs (SKUs) for this Product</label>
                             <div class="text-muted" style="margin-bottom: 0.5rem;">Choose specific BOMs from projects. Projects will be automatically included based on selected BOMs.</div>
-                            <input type="text" id="assemblyProjectsFilter" class="clr-input" placeholder="Search projects or BOMs..." style="width: 100%; margin-bottom: 0.75rem;">
-                            <div id="assemblyProjectsList">
+                            <input type="text" id="productProjectsFilter" class="clr-input" placeholder="Search projects or BOMs..." style="width: 100%; margin-bottom: 0.75rem;">
+                            <div id="productProjectsList">
                                 <p class="text-muted">Loading projects and BOMs...</p>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-secondary" data-action="close-assembly-modal">Cancel</button>
-                        <button class="btn btn-primary" data-action="save-assembly" ${isEdit ? 'disabled' : ''}>${isEdit ? 'Save Changes' : 'Create Assembly'}</button>
+                        <button class="btn btn-secondary" data-action="close-product-modal">Cancel</button>
+                        <button class="btn btn-primary" data-action="save-product" ${isEdit ? 'disabled' : ''}>${isEdit ? 'Save Changes' : 'Create Product ID'}</button>
                     </div>
                 </div>
             </div>
@@ -2174,56 +2211,56 @@ const AppRouter = {
         
         // Store original values for change detection (in edit mode)
         if (isEdit) {
-            this.originalAssemblyData = {
-                code: assembly.code || '',
-                name: assembly.name || '',
-                category: assembly.category || '',
-                description: assembly.description || '',
-                projectIds: assembly.projects ? assembly.projects.map(p => p.id).sort((a, b) => a - b) : [],
-                bomIds: assembly.selected_bom_ids ? assembly.selected_bom_ids.sort((a, b) => a - b) : []
+            this.originalProductData = {
+                code: product.code || '',
+                name: product.name || '',
+                category: product.category || '',
+                description: product.description || '',
+                projectIds: product.projects ? product.projects.map(p => p.id).sort((a, b) => a - b) : [],
+                bomIds: product.selected_bom_ids ? product.selected_bom_ids.sort((a, b) => a - b) : []
             };
             
             // Setup change detection after projects are loaded
-            this.setupAssemblyChangeDetection();
+            this.setupProductChangeDetection();
         }
         
         // Initialize projects selector (async)
-        this.initializeAssemblyProjectsSelector(assembly);
+        this.initializeProductProjectsSelector(product);
 
         // Focus on code field
-        setTimeout(() => document.getElementById('assemblyCode')?.focus(), 100);
+        setTimeout(() => document.getElementById('productCode')?.focus(), 100);
     },
 
-    closeAssemblyModal() {
+    closeProductModal() {
         if (this.currentModal) {
             this.currentModal.remove();
             this.currentModal = null;
         }
         // Clean up original data and change detection function
-        this.originalAssemblyData = null;
-        this.checkAssemblyChanges = null;
+        this.originalProductData = null;
+        this.checkProductChanges = null;
     },
 
-    setupAssemblyChangeDetection() {
+    setupProductChangeDetection() {
         const modal = this.currentModal;
         if (!modal) return;
 
         const checkForChanges = () => {
-            const saveBtn = modal.querySelector('[data-action="save-assembly"]');
-            if (!saveBtn || !this.originalAssemblyData) return;
+            const saveBtn = modal.querySelector('[data-action="save-product"]');
+            if (!saveBtn || !this.originalProductData) return;
 
-            const currentCode = document.getElementById('assemblyCode')?.value.trim() || '';
-            const currentName = document.getElementById('assemblyName')?.value.trim() || '';
-            const currentCategory = document.getElementById('assemblyCategory')?.value.trim() || '';
-            const currentDescription = document.getElementById('assemblyDescription')?.value.trim() || '';
+            const currentCode = document.getElementById('productCode')?.value.trim() || '';
+            const currentName = document.getElementById('productName')?.value.trim() || '';
+            const currentCategory = document.getElementById('productCategory')?.value.trim() || '';
+            const currentDescription = document.getElementById('productDescription')?.value.trim() || '';
             
-            const selectedProjectCheckboxes = modal.querySelectorAll('.assembly-project-checkbox:checked');
+            const selectedProjectCheckboxes = modal.querySelectorAll('.product-project-checkbox:checked');
             const currentProjectIds = Array.from(selectedProjectCheckboxes)
                 .map(cb => parseInt(cb.dataset.projectId, 10))
                 .filter(id => !isNaN(id))
                 .sort((a, b) => a - b);
             
-            const selectedBOMCheckboxes = modal.querySelectorAll('.assembly-bom-checkbox:checked');
+            const selectedBOMCheckboxes = modal.querySelectorAll('.product-bom-checkbox:checked');
             const currentBomIds = Array.from(selectedBOMCheckboxes)
                 .map(cb => parseInt(cb.dataset.bomId, 10))
                 .filter(id => !isNaN(id))
@@ -2231,22 +2268,22 @@ const AppRouter = {
 
             // Check if any field has changed
             const hasChanges = (
-                currentCode !== this.originalAssemblyData.code ||
-                currentName !== this.originalAssemblyData.name ||
-                currentCategory !== this.originalAssemblyData.category ||
-                currentDescription !== this.originalAssemblyData.description ||
-                JSON.stringify(currentProjectIds) !== JSON.stringify(this.originalAssemblyData.projectIds) ||
-                JSON.stringify(currentBomIds) !== JSON.stringify(this.originalAssemblyData.bomIds || [])
+                currentCode !== this.originalProductData.code ||
+                currentName !== this.originalProductData.name ||
+                currentCategory !== this.originalProductData.category ||
+                currentDescription !== this.originalProductData.description ||
+                JSON.stringify(currentProjectIds) !== JSON.stringify(this.originalProductData.projectIds) ||
+                JSON.stringify(currentBomIds) !== JSON.stringify(this.originalProductData.bomIds || [])
             );
 
             saveBtn.disabled = !hasChanges;
         };
 
         // Add change listeners to text inputs
-        const codeInput = document.getElementById('assemblyCode');
-        const nameInput = document.getElementById('assemblyName');
-        const categoryInput = document.getElementById('assemblyCategory');
-        const descriptionInput = document.getElementById('assemblyDescription');
+        const codeInput = document.getElementById('productCode');
+        const nameInput = document.getElementById('productName');
+        const categoryInput = document.getElementById('productCategory');
+        const descriptionInput = document.getElementById('productDescription');
 
         if (codeInput) codeInput.addEventListener('input', checkForChanges);
         if (nameInput) nameInput.addEventListener('input', checkForChanges);
@@ -2255,33 +2292,33 @@ const AppRouter = {
 
         // Add change listeners to checkboxes (will be set up after projects are loaded)
         // Store the checkForChanges function for later use
-        this.checkAssemblyChanges = checkForChanges;
+        this.checkProductChanges = checkForChanges;
     },
 
-    async saveAssembly() {
-        const id = document.getElementById('assemblyId')?.value;
+    async saveProduct() {
+        const id = document.getElementById('productId')?.value;
         const modal = this.currentModal;
         if (!modal) return;
 
-        const saveBtn = modal.querySelector('[data-action="save-assembly"]');
-        const cancelButtons = modal.querySelectorAll('[data-action="close-assembly-modal"], .close-btn');
+        const saveBtn = modal.querySelector('[data-action="save-product"]');
+        const cancelButtons = modal.querySelectorAll('[data-action="close-product-modal"], .close-btn');
 
-        const code = document.getElementById('assemblyCode')?.value.trim();
-        const name = document.getElementById('assemblyName')?.value.trim();
-        const category = document.getElementById('assemblyCategory')?.value.trim();
-        const description = document.getElementById('assemblyDescription')?.value.trim();
+        const code = document.getElementById('productCode')?.value.trim();
+        const name = document.getElementById('productName')?.value.trim();
+        const category = document.getElementById('productCategory')?.value.trim();
+        const description = document.getElementById('productDescription')?.value.trim();
         
         if (!code || !name) {
-            alert('Assembly Code and Name are required');
+            alert('Product Code and Name are required');
             return;
         }
 
-        const selectedProjectCheckboxes = modal.querySelectorAll('.assembly-project-checkbox:checked');
+        const selectedProjectCheckboxes = modal.querySelectorAll('.product-project-checkbox:checked');
         const projectIds = Array.from(selectedProjectCheckboxes)
             .map(cb => parseInt(cb.dataset.projectId, 10))
             .filter(idVal => !isNaN(idVal));
         
-        const selectedBOMCheckboxes = modal.querySelectorAll('.assembly-bom-checkbox:checked');
+        const selectedBOMCheckboxes = modal.querySelectorAll('.product-bom-checkbox:checked');
         const bomIds = Array.from(selectedBOMCheckboxes)
             .map(cb => parseInt(cb.dataset.bomId, 10))
             .filter(idVal => !isNaN(idVal));
@@ -2304,50 +2341,50 @@ const AppRouter = {
         };
         
         try {
-            const response = id ? await API.updateAssembly(data) : await API.createAssembly(data);
+            const response = id ? await API.updateProduct(data) : await API.createProduct(data);
             
             if (response.success) {
-                this.closeAssemblyModal();
+                this.closeProductModal();
                 
                 // Show success message
                 const successMsg = document.createElement('div');
                 successMsg.className = 'alert alert-success';
                 successMsg.style.cssText = 'position: fixed; top: 80px; right: 20px; z-index: 10000; padding: 1rem 1.5rem; background: #3c8500; color: white; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);';
-                successMsg.innerHTML = `<clr-icon shape="check-circle"></clr-icon> Assembly ${id ? 'updated' : 'created'} successfully!`;
+                successMsg.innerHTML = `<clr-icon shape="check-circle"></clr-icon> Product ${id ? 'updated' : 'created'} successfully!`;
                 document.body.appendChild(successMsg);
                 
                 setTimeout(() => successMsg.remove(), 3000);
                 
                 // Reload data and navigate
                 await this.loadAllData();
-                this.navigateTo('assemblies');
+                this.navigateTo('products');
             } else {
-                alert(`Failed to ${id ? 'update' : 'create'} assembly: ${response.error || response.message || 'Unknown error'}`);
+                alert(`Failed to ${id ? 'update' : 'create'} product: ${response.error || response.message || 'Unknown error'}`);
                 // Re-enable buttons on failure
                 if (saveBtn) {
                     saveBtn.disabled = false;
-                    saveBtn.innerHTML = id ? 'Save Changes' : 'Create Assembly';
+                    saveBtn.innerHTML = id ? 'Save Changes' : 'Create Product ID';
                 }
                 cancelButtons.forEach(btn => btn.disabled = false);
             }
         } catch (error) {
-            this.logError('Save assembly error', error);
-            alert(`Failed to save assembly. Error: ${error.message || 'Please try again.'}`);
+            this.logError('Save product error', error);
+            alert(`Failed to save product. Error: ${error.message || 'Please try again.'}`);
             // Re-enable buttons on failure
             if (saveBtn) {
                 saveBtn.disabled = false;
-                saveBtn.innerHTML = id ? 'Save Changes' : 'Create Assembly';
+                saveBtn.innerHTML = id ? 'Save Changes' : 'Create Product ID';
             }
             cancelButtons.forEach(btn => btn.disabled = false);
         }
     },
 
-    async initializeAssemblyProjectsSelector(assembly) {
+    async initializeProductProjectsSelector(product) {
         const modal = this.currentModal;
         if (!modal) return;
 
-        const listContainer = modal.querySelector('#assemblyProjectsList');
-        const filterInput = modal.querySelector('#assemblyProjectsFilter');
+        const listContainer = modal.querySelector('#productProjectsList');
+        const filterInput = modal.querySelector('#productProjectsFilter');
 
         if (!listContainer) {
             return;
@@ -2381,12 +2418,12 @@ const AppRouter = {
                 bomsByProject[bom.project_id].push(bom);
             });
 
-            const selectedProjectIds = assembly && Array.isArray(assembly.projects)
-                ? assembly.projects.map(p => p.id)
+            const selectedProjectIds = product && Array.isArray(product.projects)
+                ? product.projects.map(p => p.id)
                 : [];
             
-            const selectedBOMIds = assembly && Array.isArray(assembly.selected_bom_ids)
-                ? assembly.selected_bom_ids
+            const selectedBOMIds = product && Array.isArray(product.selected_bom_ids)
+                ? product.selected_bom_ids
                 : [];
 
             const renderList = (items) => {
@@ -2396,7 +2433,7 @@ const AppRouter = {
                 }
                 
                 const projectsContainer = document.createElement('div');
-                projectsContainer.className = 'assembly-projects-list';
+                projectsContainer.className = 'product-projects-list';
                 projectsContainer.style.cssText = 'max-height: 420px; overflow-y: auto; border: 1px solid #3b3b3b; border-radius: 4px; padding: 0.5rem;';
                 
                 items.forEach((p) => {
@@ -2406,12 +2443,12 @@ const AppRouter = {
                     
                     // Create project container
                     const projectDiv = document.createElement('div');
-                    projectDiv.className = 'assembly-project-container';
+                    projectDiv.className = 'product-project-container';
                     projectDiv.style.cssText = 'margin-bottom: 0.75rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;';
                     
                     // Create project header
                     const projectHeader = document.createElement('label');
-                    projectHeader.className = 'assembly-project-item';
+                    projectHeader.className = 'product-project-item';
                     projectHeader.style.cssText = 'display: flex; align-items: center; padding: 0.5rem 0.75rem; gap: 1rem; cursor: pointer; background: rgba(255,255,255,0.02); transition: background-color 0.2s;';
                     projectHeader.addEventListener('mouseenter', () => projectHeader.style.backgroundColor = 'rgba(255,255,255,0.05)');
                     projectHeader.addEventListener('mouseleave', () => projectHeader.style.backgroundColor = 'rgba(255,255,255,0.02)');
@@ -2419,16 +2456,16 @@ const AppRouter = {
                     // Project checkbox
                     const projectCheckbox = document.createElement('input');
                     projectCheckbox.type = 'checkbox';
-                    projectCheckbox.className = 'assembly-project-checkbox';
+                    projectCheckbox.className = 'product-project-checkbox';
                     projectCheckbox.dataset.projectId = p.id;
                     projectCheckbox.checked = projectIsChecked;
                     projectCheckbox.style.cssText = 'width: 18px; height: 18px; flex-shrink: 0; cursor: pointer;';
                     
                     // When project checkbox changes, check/uncheck all its BOMs
                     projectCheckbox.addEventListener('change', (e) => {
-                        const bomCheckboxes = projectDiv.querySelectorAll('.assembly-bom-checkbox');
+                        const bomCheckboxes = projectDiv.querySelectorAll('.product-bom-checkbox');
                         bomCheckboxes.forEach(cb => cb.checked = e.target.checked);
-                        if (this.checkAssemblyChanges) this.checkAssemblyChanges();
+                        if (this.checkProductChanges) this.checkProductChanges();
                     });
                     
                     // Project content
@@ -2490,14 +2527,14 @@ const AppRouter = {
                         
                         projectBOMs.forEach(bom => {
                             const bomLabel = document.createElement('label');
-                            bomLabel.className = 'assembly-bom-item';
+                            bomLabel.className = 'product-bom-item';
                             bomLabel.style.cssText = 'display: flex; align-items: center; padding: 0.35rem 0.5rem; gap: 0.75rem; cursor: pointer; border-radius: 3px; transition: background-color 0.15s;';
                             bomLabel.addEventListener('mouseenter', () => bomLabel.style.backgroundColor = 'rgba(255,255,255,0.03)');
                             bomLabel.addEventListener('mouseleave', () => bomLabel.style.backgroundColor = 'transparent');
                             
                             const bomCheckbox = document.createElement('input');
                             bomCheckbox.type = 'checkbox';
-                            bomCheckbox.className = 'assembly-bom-checkbox';
+                            bomCheckbox.className = 'product-bom-checkbox';
                             bomCheckbox.dataset.bomId = bom.id;
                             bomCheckbox.dataset.projectId = p.id;
                             bomCheckbox.checked = selectedBOMIds.includes(bom.id);
@@ -2505,10 +2542,10 @@ const AppRouter = {
                             
                             // When BOM checkbox changes, update project checkbox
                             bomCheckbox.addEventListener('change', () => {
-                                const allBOMCheckboxes = projectDiv.querySelectorAll('.assembly-bom-checkbox');
+                                const allBOMCheckboxes = projectDiv.querySelectorAll('.product-bom-checkbox');
                                 const checkedBOMs = Array.from(allBOMCheckboxes).filter(cb => cb.checked);
                                 projectCheckbox.checked = checkedBOMs.length > 0;
-                                if (this.checkAssemblyChanges) this.checkAssemblyChanges();
+                                if (this.checkProductChanges) this.checkProductChanges();
                             });
                             
                             const bomContent = document.createElement('div');
@@ -2575,7 +2612,7 @@ const AppRouter = {
                 });
             }
         } catch (error) {
-            this.logError('Load assembly projects selector error', error);
+            this.logError('Load product projects selector error', error);
             if (listContainer) {
                 listContainer.innerHTML = '<p class="text-danger">Failed to load projects and BOMs.</p>';
             }
@@ -2996,8 +3033,8 @@ const Pages = {
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Assemblies</div>
-                        <div class="stat-value">${data.assemblies.length}</div>
+                        <div class="stat-label">Product IDs</div>
+                        <div class="stat-value">${data.products.length}</div>
                     </div>
                 </div>
 
@@ -3479,20 +3516,20 @@ const Pages = {
         `;
     },
 
-    // Assemblies List
-    async renderAssemblies(assemblies) {
-        if (!assemblies || assemblies.length === 0) {
+    // Products List
+    async renderProducts(products) {
+        if (!products || products.length === 0) {
             return `
-                <div class="content-header"><h1>Assemblies</h1></div>
-                <div class="content-body"><div class="card"><p>No assemblies found.</p></div></div>
+                <div class="content-header"><h1>Product IDs</h1></div>
+                <div class="content-body"><div class="card"><p>No products found.</p></div></div>
             `;
         }
         return `
             <div class="content-header">
-                <h1>Assemblies</h1>
-                <p class="text-muted">Manage assemblies</p>
+                <h1>Product IDs</h1>
+                <p class="text-muted">Manage product IDs</p>
                 <div class="content-header-actions">
-                    <button class="btn btn-primary" data-action="create-assembly">+ Create Assembly</button>
+                    <button class="btn btn-primary" data-action="create-product">+ Create Product ID</button>
                 </div>
             </div>
             <div class="content-body">
@@ -3507,13 +3544,13 @@ const Pages = {
                         </tr>
                     </thead>
                     <tbody>
-                        ${assemblies.map(assembly => `
-                            <tr onclick="navigateTo('assemblies/${assembly.id}')">
-                                <td><strong>${assembly.code}</strong></td>
-                                <td>${assembly.name}</td>
-                                <td>${assembly.category || '-'}</td>
-                                <td>${assembly.project_count || 0}</td>
-                                <td>${new Date(assembly.updated_at).toLocaleDateString()}</td>
+                        ${products.map(product => `
+                            <tr onclick="navigateTo('products/${product.id}')">
+                                <td><strong>${product.code}</strong></td>
+                                <td>${product.name}</td>
+                                <td>${product.category || '-'}</td>
+                                <td>${product.project_count || 0}</td>
+                                <td>${new Date(product.updated_at).toLocaleDateString()}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -3522,28 +3559,28 @@ const Pages = {
         `;
     },
 
-    renderAssemblyDetail(assembly) {
-        const bomCount = assembly.boms ? assembly.boms.length : 0;
+    renderProductDetail(product) {
+        const bomCount = product.boms ? product.boms.length : 0;
         
         return `
             <div class="content-header">
-                <h1>${assembly.name}</h1>
-                <p class="text-muted">Code: ${assembly.code}</p>
+                <h1>${product.name}</h1>
+                <p class="text-muted">Code: ${product.code}</p>
                 <div class="content-header-actions">
-                    <button class="btn" data-action="edit-assembly" data-assembly-id="${assembly.id}">Edit Assembly</button>
-                    ${bomCount >= 2 ? `<button class="btn" onclick="navigateTo('boms/matrix?scope=assembly&id=${assembly.id}')">View Matrix</button>` : ''}
+                    <button class="btn" data-action="edit-product" data-product-id="${product.id}">Edit Product ID</button>
+                    ${bomCount >= 2 ? `<button class="btn" onclick="navigateTo('boms/matrix?scope=product&id=${product.id}')">View Matrix</button>` : ''}
                 </div>
             </div>
             <div class="content-body">
                 <div class="card">
-                    <h2 class="card-title">Assembly Information</h2>
-                    <p><strong>Description:</strong> ${assembly.description || 'No description'}</p>
-                    <p><strong>Category:</strong> ${assembly.category || '-'}</p>
+                    <h2 class="card-title">Product ID Information</h2>
+                    <p><strong>Description:</strong> ${product.description || 'No description'}</p>
+                    <p><strong>Category:</strong> ${product.category || '-'}</p>
                 </div>
 
                 <div class="card">
-                    <h2 class="card-title">Projects (${assembly.projects ? assembly.projects.length : 0})</h2>
-                    ${assembly.projects && assembly.projects.length > 0 ? `
+                    <h2 class="card-title">Projects (${product.projects ? product.projects.length : 0})</h2>
+                    ${product.projects && product.projects.length > 0 ? `
                         <table class="data-table">
                             <thead>
                                 <tr>
@@ -3555,7 +3592,7 @@ const Pages = {
                                 </tr>
                             </thead>
                             <tbody>
-                                ${assembly.projects.map(project => `
+                                ${product.projects.map(project => `
                                     <tr onclick="navigateTo('projects/${project.id}')">
                                         <td><strong>${project.code}</strong></td>
                                         <td>${project.name}</td>
@@ -3566,7 +3603,7 @@ const Pages = {
                                 `).join('')}
                             </tbody>
                         </table>
-                    ` : '<p>No projects in this assembly</p>'}
+                    ` : '<p>No projects in this product</p>'}
                 </div>
 
                 <div class="card">
@@ -3575,16 +3612,16 @@ const Pages = {
                         ${bomCount > 0 ? `
                             <input 
                                 type="search" 
-                                id="assemblyBOMSearch" 
+                                id="productBOMSearch" 
                                 class="clr-input" 
                                 placeholder="Filter by SKU or name..." 
                                 style="width: 300px;"
-                                onkeyup="AppRouter.filterAssemblyBOMs()"
+                                onkeyup="AppRouter.filterProductBOMs()"
                             />
                         ` : ''}
                     </div>
-                    ${assembly.boms && assembly.boms.length > 0 ? `
-                        <table class="data-table" id="assemblyBOMTable">
+                    ${product.boms && product.boms.length > 0 ? `
+                        <table class="data-table" id="productBOMTable">
                             <thead>
                                 <tr>
                                     <th>SKU</th>
@@ -3595,8 +3632,8 @@ const Pages = {
                                     <th>Last Modified</th>
                                 </tr>
                             </thead>
-                            <tbody id="assemblyBOMTableBody">
-                                ${assembly.boms.map(bom => `
+                            <tbody id="productBOMTableBody">
+                                ${product.boms.map(bom => `
                                     <tr onclick="navigateTo('boms/${bom.id}')" 
                                         data-sku="${bom.sku.toLowerCase()}" 
                                         data-name="${(bom.name || '').toLowerCase()}">
@@ -3610,15 +3647,15 @@ const Pages = {
                                 `).join('')}
                             </tbody>
                         </table>
-                    ` : '<p>No BOMs in this assembly</p>'}
+                    ` : '<p>No BOMs in this product</p>'}
                 </div>
             </div>
         `;
     },
 
-    filterAssemblyBOMs() {
-        const searchInput = document.getElementById('assemblyBOMSearch');
-        const tbody = document.getElementById('assemblyBOMTableBody');
+    filterProductBOMs() {
+        const searchInput = document.getElementById('productBOMSearch');
+        const tbody = document.getElementById('productBOMTableBody');
         
         if (!searchInput || !tbody) return;
         
@@ -3926,11 +3963,11 @@ const Pages = {
                 <div class="content-body">
                     <div class="card">
                         <h2>Missing Parameters</h2>
-                        <p>Matrix view requires a scope (project or assembly) and ID.</p>
-                        <p>Please navigate to a Project or Assembly and click "View Matrix" from there.</p>
+                        <p>Matrix view requires a scope (project or product) and ID.</p>
+                        <p>Please navigate to a Project or Product and click "View Matrix" from there.</p>
                         <div style="margin-top: 1rem;">
                             <button class="btn btn-primary" onclick="navigateTo('projects')">Go to Projects</button>
-                            <button class="btn" onclick="navigateTo('assemblies')">Go to Assemblies</button>
+                            <button class="btn" onclick="navigateTo('products')">Go to Product IDs</button>
                         </div>
                     </div>
                 </div>
@@ -3942,7 +3979,7 @@ const Pages = {
     },
 
     renderSearchResults(query, results) {
-        const totalResults = results.boms.length + results.projects.length + results.assemblies.length + results.components.length + results.optionals.length;
+        const totalResults = results.boms.length + results.projects.length + results.products.length + results.components.length + results.optionals.length;
         
         return `
             <div class="content-header">
@@ -4000,9 +4037,9 @@ const Pages = {
                     </div>
                 ` : ''}
 
-                ${results.assemblies.length > 0 ? `
+                ${results.products.length > 0 ? `
                     <div class="card">
-                        <h2 class="card-title">Assemblies (${results.assemblies.length})</h2>
+                        <h2 class="card-title">Product IDs (${results.products.length})</h2>
                         <table class="data-table">
                             <thead>
                                 <tr>
@@ -4013,12 +4050,12 @@ const Pages = {
                                 </tr>
                             </thead>
                             <tbody>
-                                ${results.assemblies.map(assembly => `
-                                    <tr onclick="navigateTo('assemblies/${assembly.id}')">
-                                        <td><strong>${assembly.code}</strong></td>
-                                        <td>${assembly.name}</td>
-                                        <td>${assembly.category || '-'}</td>
-                                        <td>${assembly.project_count || 0}</td>
+                                ${results.products.map(product => `
+                                    <tr onclick="navigateTo('products/${product.id}')">
+                                        <td><strong>${product.code}</strong></td>
+                                        <td>${product.name}</td>
+                                        <td>${product.category || '-'}</td>
+                                        <td>${product.project_count || 0}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>

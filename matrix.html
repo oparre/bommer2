@@ -397,8 +397,8 @@
         function getUrlParams() {
             const params = new URLSearchParams(window.location.search);
             return {
-                scope: params.get('scope'), // 'project' or 'assembly'
-                id: params.get('id')        // project_id or assembly_id
+                scope: params.get('scope'), // 'project' or 'product'
+                id: params.get('id')        // project_id or product_id
             };
         }
 
@@ -429,8 +429,8 @@
                 return;
             }
             
-            if (!['project', 'assembly'].includes(scope)) {
-                showError('Invalid scope parameter. Must be "project" or "assembly"', false);
+            if (!['project', 'product'].includes(scope)) {
+                showError('Invalid scope parameter. Must be "project" or "product"', false);
                 return;
             }
             
@@ -469,7 +469,7 @@
                     <div>
                         <h1>BOM 配置矩阵 / Configuration Matrix</h1>
                         <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin: 0.5rem 0 0 0;">
-                            ${matrixData.scope === 'project' ? 'Project' : 'Assembly'}: <strong>${matrixData.scope_name}</strong>
+                            ${matrixData.scope === 'project' ? 'Project' : 'Product ID'}: <strong>${matrixData.scope_name}</strong>
                         </p>
                     </div>
                     
@@ -547,7 +547,7 @@
                             <div class="sku-code">${bom.sku}</div>
                             <div class="sku-name">${bom.name}</div>
                             <div style="margin-top: 0.2rem;">${statusBadge}</div>
-                            ${matrixData.scope === 'assembly' ? `<div style="font-size: 0.55rem; color: rgba(255,255,255,0.5); margin-top: 0.2rem;">${bom.project_name || ''}</div>` : ''}
+                            ${matrixData.scope === 'product' ? `<div style="font-size: 0.55rem; color: rgba(255,255,255,0.5); margin-top: 0.2rem;">${bom.project_name || ''}</div>` : ''}
                         </div>
                     </th>`;
             });

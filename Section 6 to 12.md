@@ -4,7 +4,7 @@
 
 - **Business view**  
   Bommer distinguishes access by role so that:
-  - Only trusted users can change BOMs and structure (Projects/Assemblies).
+  - Only trusted users can change BOMs and structure (Projects/Product IDs).
   - Sales can safely consume BOM information without accidentally modifying it.
   - Administrative users can manage accounts and system configuration.
 
@@ -16,7 +16,7 @@
     - Can only access the login page and possibly publicly documented help pages (if any in future).  
 
   - **Standard User (Project Manager)**  
-    - Authenticated, can create and modify BOMs for authorized Projects/Assemblies.  
+    - Authenticated, can create and modify BOMs for authorized Projects/Product IDs.
     - Uses BOM detail, comparison, and matrix views.  
 
   - **Standard User (Sales)**  
@@ -26,7 +26,7 @@
   - **Admin**  
     - Authenticated user with elevated permissions.  
     - Manages users and roles via admin UI (existing auth subsystem).  
-    - May also have extended rights on Projects, Assemblies, and BOM configurations (depending on organization policy).  
+    - May also have extended rights on Projects, Product IDs, and BOM configurations (depending on organization policy).
 
 ---
 
@@ -38,12 +38,12 @@
 | Log in                                               | ❌        | ✅         | ✅               | ✅    |
 | View BOM list/search                                 | ❌        | ✅         | ✅               | ✅    |
 | View BOM detail                                      | ❌        | ✅         | ✅               | ✅    |
-| View comparison & matrix views (project/assembly)    | ❌        | ✅         | ✅               | ✅    |
+| View comparison & matrix views (project/product)    | ❌        | ✅         | ✅               | ✅    |
 | Export BOMs                                          | ❌        | ✅         | ✅               | ✅    |
 | Create/edit BOMs                                     | ❌        | ❌         | ✅               | ✅    |
 | Change BOM status (draft/approved/obsolete)          | ❌        | ❌         | ✅               | ✅    |
 | Create/edit Projects                                 | ❌        | ❌         | ✅				        | ✅    |
-| Create/edit Assemblies                               | ❌        | ❌         | ✅	    		      | ✅    |
+| Create/edit Product IDs                               | ❌        | ❌         | ✅	     		      | ✅    |
 | Manage user accounts/roles                           | ❌        | ❌         | ❌               | ✅    |
 | Configure system‑level settings                      | ❌        | ❌         | ❌               | ✅    |
 
@@ -52,14 +52,14 @@
 ### 6.3 Authorization Rules  
 
 - **Business view**  
-  - Changes to BOMs, Projects, and Assemblies must only be made by users who are accountable (typically Project Managers and Admins).  
+  - Changes to BOMs, Projects, and Product IDs must only be made by users who are accountable (typically Project Managers and Admins).
   - Sales must be assured they cannot accidentally alter a BOM while working with it.
 
 - **Engineering view**  
   - All protected pages and APIs must enforce authorization via the existing PHP helper functions (`requireLogin`, `requireAdmin`) extended for BOM-specific permissions.  
   - Add or reuse helper checks such as:
     - `requireProjectEditor($project_id)` – for BOM changes tied to a project.  
-    - `requireAssemblyEditor($assembly_id)` – for operations on assemblies.  
+    - `requireProductEditor($product_id)` – for operations on products.
   - All UI actions (buttons, links, forms) must reflect the user’s permissions:
     - Hide or disable actions the user is not allowed to perform.  
     - Backend must still enforce authorization (no reliance solely on UI).  
@@ -107,7 +107,7 @@
   - Engineering:
     - Implement as Clarity data grid/table with:
       - Column sorting (e.g., by Project, status, last updated).  
-      - Filters (e.g., by Project, Assembly, status).  
+      - Filters (e.g., by Project, Product ID, status).
       - Row actions (view, compare, open matrix context).  
 
 - **BOM Detail & Editing**  
@@ -137,11 +137,11 @@
       - Minimal “No.” column in each BOM table, per constraint.  
     - Implement view toggles at the header (grouped/flat) following Clarity styles.  
 
-- **Matrix View (Project and Assembly)**  
+- **Matrix View (Project and Product ID)**  
   - Business:
     - Provide a matrix showing multiple BOMs as columns and components/attributes as rows.  
     - For Projects: compare BOMs belonging to the same Project.  
-    - For Assemblies: compare BOMs across Projects that belong to the same Assembly.  
+    - For Product IDs: compare BOMs across Projects that belong to the same Product ID.
   - Engineering:
     - Implement as Clarity‑based table or grid:
       - Columns: BOMs (identified by name, revision, status).  
@@ -155,13 +155,13 @@
 #### 7.2.1 Matrix View UX & Interaction Details  
 
 - **Business view**  
-  - Matrix View compares up to 10 related BOM SKUs at once for a given Project or Assembly so users can quickly see which components are common, unique, or differ in quantity or cost.  
+  - Matrix View compares up to 10 related BOM SKUs at once for a given Project or Product ID so users can quickly see which components are common, unique, or differ in quantity or cost.
   - Component variants (for example the same logical part with different vendor/MPN) are represented as separate rows so supplier choices and variant impacts are clearly visible.  
   - The matrix is primarily a high-level analysis tool; users should be able to understand key differences without leaving the page, but can drill into specific BOMs when needed.  
 
 - **Engineering view**  
   - **Scope and structure**:  
-    - Project matrix: columns are BOMs belonging to the same Project; Assembly matrix: columns are BOMs whose Projects belong to the same Assembly.  
+    - Project matrix: columns are BOMs belonging to the same Project; Product ID matrix: columns are BOMs whose Projects belong to the same Product ID.
     - Rows are components; variants are modeled as separate rows (for example, Part A – Vendor 1, Part A – Vendor 2).  
     - Left-side sticky columns include `No.`, `Part number`, `Name`, and `Description`; BOM columns are horizontally scrollable.  
   - **Interaction rules**:  
@@ -172,13 +172,13 @@
     - Matrix View supports at least a grouped-by-category presentation; a flattened mode (all components in a single list with group badges) may reuse the BOM grouped/flat toggle pattern if introduced later.  
     - No row-level filtering is applied in v1; all components in scope are always shown to avoid accidentally hiding important differences.  
     - The implementation must handle edge cases efficiently:  
-      - Single BOM input → show an explanatory message that at least two BOMs are required, and offer a link back to the Project or Assembly detail.  
+      - Single BOM input → show an explanatory message that at least two BOMs are required, and offer a link back to the Project or Product ID detail.
       - No common parts → render the matrix and clearly indicate that all tracked components are unique across the compared BOMs.  
       - Large datasets (many components or many BOMs, up to 10 columns) → rely on sticky headers, scrollable regions, and efficient rendering to keep performance and accessibility within the targets defined for v1.  
 
-- **Assembly & Project Views**  
+- **Product ID & Project Views**  
   - Business:
-    - For an Assembly: list its Projects and allow navigating into their BOMs, comparison, and matrix views.  
+    - For a Product ID: list its Projects and allow navigating into their BOMs, comparison, and matrix views.
     - For a Project: list its BOMs, show current revision, and link to comparison/matrix.  
   - Engineering:
     - Clarity cards or tables for lists.  
@@ -190,15 +190,15 @@
 
 - **Business view**  
   - Users should easily move between:
-    - Assembly → Project → BOM → Comparison/Matrix.  
+    - Product ID → Project → BOM → Comparison/Matrix.
     - Search results and detail views.  
 
 - **Engineering view**  
   - Global navigation:
-    - Top‑level entry points (e.g., BOM Dashboard, Assemblies, Projects, Admin).  
+    - Top‑level entry points (e.g., BOM Dashboard, Product IDs, Projects, Admin).
   - Local navigation:
-    - Tabs or sub‑navigation inside Projects and Assemblies.  
-    - Breadcrumbs showing context (Assembly / Project / BOM).  
+    - Tabs or sub‑navigation inside Projects and Product IDs.
+    - Breadcrumbs showing context (Product ID / Project / BOM).
 
 ---
 
@@ -212,7 +212,7 @@
     - Ensure correct heading structure for pages.  
     - Provide accessible labels for:
       - Filters.  
-      - View toggles (grouped/flat, project/assembly scope).  
+      - View toggles (grouped/flat, project/product scope).
       - Matrix/comparison actions (e.g., “Add BOM to comparison”).  
     - Ensure:
       - Keyboard operability of all core actions (no mouse‑only features).  
@@ -278,11 +278,11 @@
      - Return 403 or redirect with message "You do not have permission to perform this action."  
      - Ensure all APIs and pages check role/permission.  
 
-4. **Assembly/Project Association Constraints**  
+4. **Product ID/Project Association Constraints**  
    - Business:
-     - Attempt to remove a Project from an Assembly that is required by policy.  
+     - Attempt to remove a Project from a Product ID that is required by policy.
    - Engineering:
-     - Enforce constraints with clear error messages (e.g., "This project cannot be removed from this assembly due to active BOMs in status X.").  
+     - Enforce constraints with clear error messages (e.g., "This project cannot be removed from this product due to active BOMs in status X.").
 
 5. **Matrix & Comparison Edge Cases**  
    - Business:
@@ -336,11 +336,11 @@
     - How often is Bommer used vs legacy workflows.  
   - Understand BOM usage:
     - Which BOMs are most referenced for quotations.  
-    - Which Assemblies/Projects have the most variants.  
+    - Which Product IDs/Projects have the most variants.
 
 - **Engineering view**  
   - Minimal initial analytics:
-    - Access logs (who accessed which BOM/Assembly/Project and when).  
+    - Access logs (who accessed which BOM/Product ID/Project and when).
     - Basic usage metrics:
       - Number of logins.  
       - Number of BOM views, exports, comparisons, matrix views.  
@@ -352,15 +352,15 @@
 - **Business view**  
   - At minimum, internal stakeholders should be able to:
     - List BOMs with their statuses and last updated dates.  
-    - List Assemblies and associated Projects.  
+    - List Product IDs and associated Projects.
     - Extract audit logs when investigating issues.  
 
 - **Engineering view**  
   - Provide internal queries/reports (SQL or admin pages) for:
     - BOM status overview.  
-    - Assemblies and their Projects.  
+    - Product IDs and their Projects.
     - Audit log filters (by date, user, entity, action).  
-    - Where-used reports for components (which BOMs/Projects/Assemblies reference a given component or variant).  
+    - Where-used reports for components (which BOMs/Projects/Product IDs reference a given component or variant).
     - Lists of BOMs that currently include banned or obsolete components to support cleanup and impact analysis.  
   - UI-level dashboards are nice-to-have for later phases, not mandatory for v1.  
 
@@ -420,7 +420,7 @@
     - CSRF protection on all state‑changing requests.  
     - Session hardening (regeneration, fingerprinting, account lockout, remember‑me security).  
     - PDO prepared statements for all DB access.  
-  - Ensure BOM, Project, and Assembly data is only accessible according to defined permissions.  
+  - Ensure BOM, Project, and Product ID data is only accessible according to defined permissions.
 
 ---
 
@@ -431,10 +431,10 @@
 
 - **Engineering view**  
   - Code guidelines:
-    - Clear separation between domain logic (BOMs, Assemblies) and infrastructure (auth, DB).  
+    - Clear separation between domain logic (BOMs, Product IDs) and infrastructure (auth, DB).
     - Consistent use of helper functions and patterns for permission checks.  
   - Documentation:
-    - Keep PRD, architecture, and auth docs updated with BOM/Assembly modules.  
+    - Keep PRD, architecture, and auth docs updated with BOM/Product ID modules.
 
 ---
 
@@ -446,7 +446,7 @@
 - **Engineering view**  
   - Design the schema and queries with growth in mind.  
   - Consider future ability to:
-    - Partition data (by Project/Assembly) if necessary.  
+    - Partition data (by Project/Product ID) if necessary.
     - Add search indexing or caching layers if usage grows.  
 
 ---
@@ -502,10 +502,10 @@
 - **Business view**  
   - Should there be explicit workflow steps around BOM approval (e.g., “submitted”, “under review”, “approved”), or is a simple status field sufficient?  
   - Are there specific reporting views that stakeholders need (beyond basic lists and logs)?  
-  - Do different departments require different visibility into Assemblies and Projects?
+  - Do different departments require different visibility into Product IDs and Projects?
 
 - **Engineering view**  
-  - How granular should permissions be (e.g., per‑Project or per‑Assembly access rules)?  
+  - How granular should permissions be (e.g., per‑Project or per‑Product ID access rules)?
   - Should matrix and comparison views support selective revision choices (e.g., compare v1 vs v3 of a BOM)?  
   - Are there future integration targets (ERP, costing tools) that should influence current schema design (e.g., adding fields for supplier codes, pricing, etc.)?  
 
@@ -519,14 +519,14 @@
     - Suggest BOM components based on project metadata.  
     - Automatically highlight risky differences between BOM versions or variants.  
   - **Advanced reporting dashboards**:
-    - BOM usage, component usage, assembly complexity, etc.  
+    - BOM usage, component usage, product complexity, etc.
 
 - **Engineering view**  
   - Potential enhancements:
     - REST or GraphQL API layer for BOM data.  
     - Integration with external systems (ERP/PLM) for component and cost data.  
     - More sophisticated search (full‑text, fuzzy matching).  
-    - Performance optimizations for very large BOMs and assemblies (pagination, virtualized rendering, caching).  
+    - Performance optimizations for very large BOMs and products (pagination, virtualized rendering, caching).
 
 ---
 

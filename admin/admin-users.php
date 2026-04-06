@@ -224,30 +224,6 @@ try {
 </head>
 <body class="admin-page" role="document">
     <div class="main-container">
-        <!-- Header -->
-        <header class="header header-6" role="banner">
-            <div class="branding">
-                <a href="/app.php" class="nav-link" aria-label="Bommer Admin Dashboard Home">
-                    <span class="title">Bommer Admin</span>
-                </a>
-            </div>
-            <nav class="header-nav" role="navigation" aria-label="Main navigation">
-                <a href="/app.php" class="nav-link" aria-label="Go to Dashboard">
-                    <span class="nav-text">Dashboard</span>
-                </a>
-            </nav>
-            <div class="header-actions" role="group" aria-label="User actions">
-                <span class="p6" aria-label="Current user: <?php echo htmlspecialchars(getCurrentUsername(), ENT_QUOTES, 'UTF-8'); ?>">
-                    <clr-icon shape="user" aria-hidden="true"></clr-icon>
-                    <?php echo htmlspecialchars(getCurrentUsername(), ENT_QUOTES, 'UTF-8'); ?>
-                </span>
-                <a href="/auth/logout.php" class="btn btn-sm btn-link" aria-label="Logout from admin panel">
-                    <clr-icon shape="logout" aria-hidden="true"></clr-icon>
-                    Logout
-                </a>
-            </div>
-        </header>
-        
         <!-- Content -->
         <div class="content-container">
             <main class="content-area" role="main" aria-labelledby="page-title">

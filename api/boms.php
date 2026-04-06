@@ -1191,7 +1191,7 @@ function exportBOM($pdo) {
 }
 
 /**
- * GET - Matrix data for project or assembly scope
+ * GET - Matrix data for project or product scope
  * Returns BOMs and their components for matrix comparison view
  */
 function getMatrixData($pdo) {
@@ -1204,8 +1204,8 @@ function getMatrixData($pdo) {
             sendError('Missing required parameters: scope and id', 400);
         }
         
-        if (!in_array($scope, ['project', 'assembly'])) {
-            sendError('Invalid scope. Must be "project" or "assembly"', 400);
+        if (!in_array($scope, ['project', 'product'])) {
+            sendError('Invalid scope. Must be "project" or "product"', 400);
         }
         
         if (!is_numeric($id)) {
@@ -1216,7 +1216,7 @@ function getMatrixData($pdo) {
         if ($scope === 'project') {
             $bomData = fetchBOMsByProject($pdo, $id);
         } else {
-            $bomData = fetchBOMsByAssembly($pdo, $id);
+            $bomData = fetchBOMsByProduct($pdo, $id);
         }
         
         if (empty($bomData['boms'])) {
@@ -1284,19 +1284,19 @@ function fetchBOMsByProject($pdo, $projectId) {
 }
 
 /**
- * Fetch BOMs for an assembly (max 10)
+ * Fetch BOMs for a product (max 10)
  */
-function fetchBOMsByAssembly($pdo, $assemblyId) {
-    // Get assembly info
-    $stmt = $pdo->prepare("SELECT name, code FROM assemblies WHERE id = :id");
-    $stmt->execute([':id' => $assemblyId]);
-    $assembly = $stmt->fetch();
+function fetchBOMsByProduct($pdo, $productId) {
+    // Get product info
+    $stmt = $pdo->prepare("SELECT name, code FROM products WHERE id = :id");
+    $stmt->execute([':id' => $productId]);
+    $product = $stmt->fetch();
     
-    if (!$assembly) {
-        sendError('Assembly not found', 404);
+    if (!$product) {
+        sendError('Product not found', 404);
     }
     
-    // Get BOMs from all projects in this assembly
+    // Get BOMs from all projects in this product
     $stmt = $pdo->prepare(
         "SELECT b.id, b.sku, b.name, b.description, b.current_revision,
                 br.status, br.notes as revision_notes,
@@ -1304,16 +1304,16 @@ function fetchBOMsByAssembly($pdo, $assemblyId) {
          FROM boms b
          JOIN bom_revisions br ON b.id = br.bom_id AND br.revision_number = b.current_revision
          JOIN projects p ON b.project_id = p.id
-         JOIN assembly_projects ap ON p.id = ap.project_id
-         WHERE ap.assembly_id = :assembly_id
+         JOIN product_projects pp ON p.id = pp.project_id
+         WHERE pp.product_id = :product_id
          ORDER BY p.name, b.sku
          LIMIT 10"
     );
-    $stmt->execute([':assembly_id' => $assemblyId]);
+    $stmt->execute([':product_id' => $productId]);
     $boms = $stmt->fetchAll();
     
     return [
-        'scope_name' => $assembly['name'] . ' (' . $assembly['code'] . ')',
+        'scope_name' => $product['name'] . ' (' . $product['code'] . ')',
         'boms' => $boms
     ];
 }

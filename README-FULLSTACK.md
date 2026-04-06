@@ -70,7 +70,7 @@ bommer/
 │   ├── index.php                 # API base configuration
 │   ├── boms.php                  # BOM CRUD operations
 │   ├── projects.php              # Project CRUD operations
-│   ├── assemblies.php            # Assembly CRUD operations
+│   ├── products.php              # Product CRUD operations
 │   ├── components.php            # Component CRUD operations
 │   └── audit.php                 # Audit log endpoint
 ├── auth/                         # Authentication system
@@ -128,8 +128,8 @@ bommer/
 ### Core Tables
 - **users** - User accounts with authentication
 - **projects** - Project management
-- **assemblies** - Assembly definitions
-- **assembly_projects** - Many-to-many relationship
+- **products** - Product definitions
+- **product_projects** - Many-to-many relationship
 - **components** - Component catalog
 - **boms** - BOM headers with SKU
 - **bom_revisions** - BOM version control

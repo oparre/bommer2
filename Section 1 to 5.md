@@ -6,7 +6,7 @@
   For development and sales teams frustrated with messy, incomplete and outdated bills of materials, the Bommer web app is a workspace that organizes all BOM creation, communication, and retrieval into a searchable, well‑presented interface.
 
 - **Engineering view**  
-  Bommer is an internal web application running on PHP 8.3.6, MySQL 8.3.0, and Apache, with a Clarity Design System frontend. It provides authenticated, role‑based access to a structured BOM, Project, and Assembly data model, including fast search, matrix and comparison views, and full revision/audit history.
+  Bommer is an internal web application running on PHP 8.3.6, MySQL 8.3.0, and Apache, with a Clarity Design System frontend. It provides authenticated, role‑based access to a structured BOM, Project, and Product ID data model, including fast search, matrix and comparison views, and full revision/audit history.
 
 ---
 
@@ -18,9 +18,9 @@
   - There is a high risk of using obsolete spreadsheets for quotations, which can lead to incorrect pricing and customer promises.  
 
 - **Engineering view**  
-  - There is no canonical, central database for BOMs, their revisions, statuses, and relationships to projects and assemblies.  
+  - There is no canonical, central database for BOMs, their revisions, statuses, and relationships to projects and products.  
   - Excel‑based BOMs lack schema enforcement, validation, and audit logging; they are not suited for reliable querying, searching, or automated processing.  
-  - Existing infrastructure (authentication module, Clarity UI, local asset constraints) is in place but not yet leveraged to manage BOMs and Assemblies comprehensively.
+  - Existing infrastructure (authentication module, Clarity UI, local asset constraints) is in place but not yet leveraged to manage BOMs and Product IDs comprehensively.
 
 ---
 
@@ -36,7 +36,7 @@
   - Standardizing on **PHP 8.3.6** and **MySQL 8.3.0** provides a modern stack with good performance and long‑term support.  
   - Building Bommer now allows:  
     - Reuse of the existing security layers (CSRF, brute‑force protection, session fingerprinting, remember‑me).  
-    - A single data model for Projects, Assemblies, BOMs, and Components that can support later integrations (e.g., AI assistance, reporting) without changing foundations.
+    - A single data model for Projects, Product IDs, BOMs, and Components that can support later integrations (e.g., AI assistance, reporting) without changing foundations.
 
 ---
 
@@ -50,7 +50,7 @@
 
 - **Engineering view**  
   - ≥ 80% of BOM retrieval actions are performed via Bommer (as inferred from access logs and database usage).  
-  - 0 critical data‑loss incidents affecting BOMs, projects, or assemblies.  
+  - 0 critical data‑loss incidents affecting BOMs, projects, or products.  
   - < 1% of BOM‑related actions result in support tickets or manual interventions due to system issues.  
   - Typical performance targets:  
     - BOM search: < 1 second for typical dataset size.  
@@ -69,7 +69,7 @@
 - **Engineering view**  
   - Performance problems in search or matrix/comparison views, especially for real‑world BOM sizes.  
   - Data inconsistencies in version histories or statuses (e.g., approved BOMs not clearly distinguished from drafts or obsolete versions).  
-  - Security regressions (e.g., incorrect permissions, unauthorized access to BOMs or Assemblies).  
+  - Security regressions (e.g., incorrect permissions, unauthorized access to BOMs or Product IDs).
   - Accessibility issues that make the app unusable for users relying on keyboard or assistive tech, violating WCAG 2.2 AA.
 
 ---
@@ -94,12 +94,12 @@
 
 - **Business view**  
   - Target: **usable v1 within 3 weeks**.  
-  - v1 must support core BOM workflows and basic matrix/comparison visualization for same‑project BOMs; assembly‑based matrix and deeper reporting can be iterated on, but must have a clear first‑cut.
+  - v1 must support core BOM workflows and basic matrix/comparison visualization for same‑project BOMs; product‑based matrix and deeper reporting can be iterated on, but must have a clear first‑cut.
 
 - **Engineering view**  
   - Priorities for v1:  
-    - Data model: Projects, Assemblies, BOMs, Components, revisions, statuses, and audit logs.  
-    - Workflows: create/edit BOMs, set statuses, search/retrieve/export BOMs, view matrix and comparison for BOMs in a project and assembly.  
+    - Data model: Projects, Product IDs, BOMs, Components, revisions, statuses, and audit logs.
+    - Workflows: create/edit BOMs, set statuses, search/retrieve/export BOMs, view matrix and comparison for BOMs in a project and product.  
     - Security: integrate fully with the existing authentication system (login, roles, sessions, CSRF).  
     - Accessibility: WCAG 2.2 AA within Clarity.  
   - Explicitly **not** in v1: full PLM workflows, external monetization, or multi‑tenant architecture.
@@ -121,7 +121,7 @@
     - Create BOMs for projects they own.  
     - Edit and revise BOMs.  
     - Mark BOMs as obsolete or change status.  
-    - Use matrix and comparison views to analyze BOM variants per project or assembly.  
+    - Use matrix and comparison views to analyze BOM variants per project or product.  
 
 ---
 
@@ -135,10 +135,10 @@
 - **Engineering view**  
   - Role in system: typically **read‑only user** for BOM data.  
   - Permissions:  
-    - Search and view BOMs, Projects, and Assemblies.  
+    - Search and view BOMs, Projects, and Product IDs.
     - Use comparison and matrix views to understand differences.  
     - Export BOMs (e.g., CSV/XLSX/PDF) for use in quoting tools.  
-    - No permission to modify BOM contents, statuses, or project/assembly structure.
+    - No permission to modify BOM contents, statuses, or project/product structure.
 
 ---
 
@@ -164,7 +164,7 @@
 - **Business view**  
   In their first 5 minutes with Bommer, a new user should be able to:  
   - Log in.  
-  - Find the BOM they care about for a particular project or assembly.  
+  - Find the BOM they care about for a particular project or product.
   - Confirm they are viewing the latest revision and correct status.  
   - Export or otherwise use that BOM in their existing quoting or planning workflow.
 
@@ -172,7 +172,7 @@
   Typical first‑time flow:  
   1. User signs in via the existing login flow.  
   2. User is taken to a **BOM dashboard** or landing page.  
-  3. User uses search or filters (by project, assembly, status, BOM name, etc.) to locate their BOM.  
+  3. User uses search or filters (by project, product, status, BOM name, etc.) to locate their BOM.  
   4. User opens BOM detail, comparison view, or matrix view.  
   5. User exports or copies data as needed (with clear status/revision context).
 
@@ -206,7 +206,7 @@
       - Logging in.  
       - Navigating BOM lists.  
       - Opening comparison views and matrix views.  
-      - Changing filters and toggles (grouped/flat view, project vs assembly scope for matrix, etc.).  
+      - Changing filters and toggles (grouped/flat view, project vs product scope for matrix, etc.).  
     - Ensure visible focus indicators and logical focus order.  
     - Ensure sufficient color contrast for dark theme and highlight states.  
     - Use meaningful text labels and ARIA attributes where Clarity allows configuration, without replacing Clarity itself.
@@ -235,15 +235,15 @@
 
   - **BOM Management**  
     - Create, edit, and revise BOMs for Projects.  
-    - Each BOM is identified by a globally unique SKU that users can rely on across all Projects and Assemblies.  
+    - Each BOM is identified by a globally unique SKU that users can rely on across all Projects and Product IDs.
     - Manage BOM revisions with statuses (e.g., draft, approved, obsolete, invalidated); BOMs themselves are never physically deleted.  
     - Mistakes are corrected by creating new revisions, not by removing old ones.  
     - Users can safely edit BOMs without losing work thanks to automatic local autosave during editing.
 
   - **Search & Retrieval**  
-    - Quickly search and filter by Project, Assembly, status, part numbers, etc.  
+    - Quickly search and filter by Project, Product ID, status, part numbers, etc.
     - Ensure users can always find the **latest approved** BOM for a given need.  
-    - Provide a component "where-used" view so users can see all BOMs (by SKU), Projects, and Assemblies that reference a specific component.
+    - Provide a component "where-used" view so users can see all BOMs (by SKU), Projects, and Product IDs that reference a specific component.
 
   - **Comparison Views**  
     - Side‑by‑side comparisons of BOMs (e.g., up to 5) with synchronized scrolling.  
@@ -251,22 +251,22 @@
 
   - **Matrix Views (Core UX Module)**  
     - **Project‑level matrix**: compare multiple BOMs belonging to the same Project in a matrix layout.  
-    - **Assembly‑level matrix**: compare BOMs across Projects belonging to the same Assembly.  
+    - **Product‑level matrix**: compare BOMs across Projects belonging to the same Product ID.
     - Provide an overview of common and differing components across variants.
 
-  - **Assemblies**  
-    - Ability to define Assemblies as combinations of Projects.  
-    - Navigate from an Assembly to its Projects and their BOMs.
+  - **Product IDs**
+    - Ability to define Product IDs as combinations of Projects.
+    - Navigate from a Product ID to its Projects and their BOMs.
 
   - **Audit Logs & Version History**  
     - Full version history for BOMs (immutable revisions) where each revision carries its own status (draft, approved, obsolete, invalidated).  
-    - Audit log of key actions (BOM creation, revision saves, status changes, assembly/project associations) with enough detail to reconstruct who changed what and why.
+    - Audit log of key actions (BOM creation, revision saves, status changes, product/project associations) with enough detail to reconstruct who changed what and why.
 
 - **Engineering view**  
   Must‑have implementation aspects:
 
   - **Data model** for:  
-    - Assemblies, Projects, BOMs, BOM revisions, BOM items, Components, Users, Audit logs.  
+    - Product IDs, Projects, BOMs, BOM revisions, BOM items, Components, Users, Audit logs.
 
   - **BOM CRUD**  
     - Create/update BOMs and their components with validation and no physical deletes.  
@@ -283,7 +283,7 @@
     - Use existing PHP auth stack (login, roles, sessions, CSRF, remember-me).  
 
   - **Logging & audit**  
-    - Record major events in audit logs: edit session start (optional), revision saves, status changes, lock acquire/release, and bulk operations affecting BOMs, Assemblies, or Project–Assembly associations.
+    - Record major events in audit logs: edit session start (optional), revision saves, status changes, lock acquire/release, and bulk operations affecting BOMs, Product IDs, or Project–Product ID associations.
 
 ---
 
@@ -293,7 +293,7 @@
   - **AI integration**:  
     - Suggest components for new BOMs based on partial information.  
     - Highlight differences between BOM revisions or variants more intelligently.  
-  - Advanced reporting or dashboards (e.g., BOM coverage across assemblies, components usage frequency).
+  - Advanced reporting or dashboards (e.g., BOM coverage across products, components usage frequency).
 
 - **Engineering view**  
   - AI features require:  
@@ -331,11 +331,11 @@
   - Save a new BOM revision.  
   - Change BOM status (draft → approved, approved → obsolete, etc.).  
   - Use comparison view to compare multiple BOM variants.  
-  - Use matrix view at Project or Assembly level to analyze variants.  
+  - Use matrix view at Project or Product ID level to analyze variants.
   - Export BOMs for sharing or offline analysis.
 
   **Sales actions:**  
-  - Log in and search for a specific Project, Assembly, or BOM.  
+  - Log in and search for a specific Project, Product ID, or BOM.
   - View BOM details, comparison, and matrix views.  
   - Export BOMs (read‑only).
 
@@ -350,14 +350,14 @@
   - Project:  
     - Link BOMs to Projects; manage basic project metadata.  
 
-  - Assembly:  
-    - Create Assemblies; link/unlink Projects to/from Assemblies.  
+  - Product ID:
+    - Create Product IDs; link/unlink Projects to/from Product IDs.
 
   - Views:  
     - Handlers/views to render:  
       - BOM list views.  
       - BOM detail views.  
-      - Comparison and matrix views for specified sets of BOMs (project or assembly scoped).
+      - Comparison and matrix views for specified sets of BOMs (project or product scoped).
 
 ---
 
@@ -462,13 +462,13 @@
 
 - **Business view**
 
-  - **Assembly**  
+  - **Product ID**  
     - A combination of multiple Projects that together form a larger product or deliverable.  
     - Provides a higher‑level grouping for BOMs across projects.
 
   - **Project**  
     - A product or internal project for which BOMs are created.  
-    - A Project can belong to multiple Assemblies.
+    - A Project can belong to multiple Product IDs.
 
   - **BOM (Bill of Materials)**  
     - A structured list of components for a Project, identified by a globally unique SKU. Each SKU corresponds to exactly one BOM, and each BOM maintains its own independent revision history.  
@@ -476,7 +476,7 @@
     - Has an immutable revision history where each revision carries its own status (draft, approved, obsolete, invalidated).
 
   - **Component**  
-    - An individual part or item that appears in many BOMs across projects and assemblies and may have revisions and vendor/MPN variants.
+    - An individual part or item that appears in many BOMs across projects and products and may have revisions and vendor/MPN variants.
 
   - **User**  
     - Internal user accounts (project managers, sales, admins) who authenticate via the existing auth system and act on BOM data.
@@ -485,31 +485,31 @@
 
   Core tables (conceptually):
 
-  - `assemblies` – basic metadata about each assembly.  
-  - `assembly_projects` – join table mapping Assemblies ↔ Projects (many‑to‑many).  
+  - `products` – basic metadata about each product.  
+  - `product_projects` – join table mapping Product IDs ↔ Projects (many‑to‑many).  
   - `projects` – holds project metadata.  
   - `boms` – BOM records; includes project linkage, globally unique SKU, and a pointer to the current revision.  
   - `bom_revisions` (or `boms` with versioning fields) – tracks immutable revisions per BOM, including status and reason for change.  
   - `bom_items` – line items for BOMs, linking to components and carrying quantities & other attributes.  
   - `components` – component catalog with revision/variant and status information used for validity checks.  
   - `users` – existing auth users.  
-  - `audit_logs` – records of important changes (BOMs, Assemblies, associations, statuses).
+  - `audit_logs` – records of important changes (BOMs, Product IDs, associations, statuses).
 
 ---
 
 ### 5.2 Relationships  
 
 - **Business view**  
-  - An **Assembly** contains multiple **Projects**.  
-  - A **Project** can be part of multiple Assemblies (flexible grouping).  
+  - A **Product ID** contains multiple **Projects**.
+  - A **Project** can be part of multiple Product IDs (flexible grouping).
   - A **Project** has one or more **BOMs**.  
   - Each **BOM** has multiple **Components** via BOM line items.  
 
 - **Engineering view**  
 
-  - Assemblies ↔ Projects: **many‑to‑many**  
-    - `assembly_projects.assembly_id` → `assemblies.id`.  
-    - `assembly_projects.project_id` → `projects.id`.  
+  - Product IDs ↔ Projects: **many‑to‑many**  
+    - `product_projects.product_id` → `products.id`.  
+    - `product_projects.project_id` → `projects.id`.  
 
   - Projects ↔ BOMs: **one‑to‑many**  
     - `boms.project_id` → `projects.id`.  
@@ -521,11 +521,11 @@
     - `bom_items.component_id` → `components.id`.  
 
   These relationships must support:  
-  - Filtering BOMs by project or assembly for list, matrix, and comparison views.  
+  - Filtering BOMs by project or product ID for list, matrix, and comparison views.
   - Efficient queries for:  
     - Project-level matrix: all BOMs with `boms.project_id = X`.  
-    - Assembly-level matrix: all BOMs whose projects are linked to Assembly Y via `assembly_projects`.  
-  - Efficient "where-used" queries for components to list all BOMs (by SKU), Projects, and Assemblies that reference a given component or variant.
+    - Product-level matrix: all BOMs whose projects are linked to Product Y via `product_projects`.  
+  - Efficient "where-used" queries for components to list all BOMs (by SKU), Projects, and Product IDs that reference a given component or variant.
 
 ---
 
@@ -542,7 +542,7 @@
     - Components: thousands.  
     - BOM items: thousands to tens of thousands.  
   - Performance considerations:  
-    - Indices on `project_id`, `assembly_id` (via join), `bom_id`, `component_id`, and status fields.  
+    - Indices on `project_id`, `product_id` (via join), `bom_id`, `component_id`, and status fields.
     - Careful query design for matrix views (often multi‑BOM joins).  
     - Pagination or scoped loading in UI for large matrices to keep rendering fast and accessible.
 
@@ -554,12 +554,12 @@
   - **No physical deletion** of BOMs or critical domain objects in v1.  
   - Instead:  
     - BOMs can be marked “obsolete” or superseded by newer revisions.  
-    - Assemblies, Projects, and Components may have similar active/inactive semantics to prevent use in new BOMs while preserving history.
+    - Product IDs, Projects, and Components may have similar active/inactive semantics to prevent use in new BOMs while preserving history.
 
 - **Engineering view**  
   - Use status flags and possibly soft-delete fields:  
     - `status` (`draft`, `approved`, `obsolete`, `invalidated`, etc.) on revisions.  
-    - `is_active` or similar flags and detailed status for Projects, Assemblies, Components (including "banned" where applicable).  
+    - `is_active` or similar flags and detailed status for Projects, Product IDs, Components (including "banned" where applicable).
   - Rely on database backups for full recovery from catastrophic errors.  
   - UI and queries must consistently respect status flags (e.g., show current/approved BOMs by default but allow viewing obsolete/invalidated/revision history as needed) and prevent saving new BOM revisions that contain banned components.
 
@@ -571,13 +571,13 @@
   - Stakeholders must be able to answer:  
     - Who created or changed a BOM?  
     - When was a BOM approved or marked obsolete?  
-    - How were projects assigned or removed from assemblies?  
+    - How were projects assigned or removed from product IDs?
 
 - **Engineering view**  
   - `audit_logs` (or equivalent) must track major events rather than every keystroke:  
-    - Entity type (e.g., BOM, Assembly, Project, BOM Item).  
+    - Entity type (e.g., BOM, Product ID, Project, BOM Item).
     - Entity ID.  
-    - Action (e.g., edit session start, revision created, status change, lock acquired/released, project added to assembly, bulk update).  
+    - Action (e.g., edit session start, revision created, status change, lock acquired/released, project added to product, bulk update).
     - User ID.  
     - Timestamp.  
     - Description (e.g., Reason for Change or summary of the event).  

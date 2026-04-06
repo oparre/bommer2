@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bommer — Entity Relationship Map</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #070c18;
+    color: #e2e8f0;
+  }
+  header { display: none; }
+  .card {
+    position: fixed;
+    inset: 0;
+    background: #0f172a;
+    overflow: hidden;
+  }
+  #diagram-svg {
+    display: block;
+    width: 100%;
+    height: calc(100vh - 42px);
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  #diagram-svg.dragging { cursor: grabbing; }
+
+  /* Zoom controls */
+  .zoom-controls {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 10;
+  }
+  .zoom-controls button {
+    width: 34px;
+    height: 34px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #94a3b8;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+  }
+  .zoom-controls button:hover { background: #334155; color: #e2e8f0; }
+  .zoom-level {
+    font-size: 0.7rem;
+    color: #475569;
+    text-align: center;
+    letter-spacing: 0.5px;
+  }
+  .zoom-hint {
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.72rem;
+    color: #64748b;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  /* Legend */
+  .legend {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 42px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    padding: 0 20px;
+    background: rgba(15,23,42,0.96);
+    border-top: 1px solid #1e293b;
+    overflow: hidden;
+  }
+  .li { display: flex; align-items: center; gap: 7px; font-size: 0.78rem; color: #94a3b8; }
+  .lb { width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; }
+  .sep { color: #334155; font-size: 1.2rem; align-self: center; }
+  .note { font-size: 0.75rem; color: #64748b; align-self: center; }
+
+  /* ── Node cards rendered inside foreignObject ── */
+  .ncard {
+    width: 100%; height: 100%;
+    border-radius: 13px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    box-sizing: border-box;
+  }
+  .ncard-hdr {
+    padding: 5px 9px 4px;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ncard-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 3px 8px 4px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.12) transparent;
+  }
+  .ncard-body::-webkit-scrollbar { width: 3px; }
+  .ncard-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+  .ncard-row {
+    display: block;
+    font-size: 10px;
+    line-height: 1.6;
+    padding: 1px 3px;
+    margin: 0 -3px;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-radius: 3px;
+    transition: background 0.1s;
+  }
+  a.ncard-row { cursor: pointer; }
+  a.ncard-row:hover { text-decoration: underline; opacity: 0.85; }
+  span.ncard-row { cursor: default; }
+  .ncard-empty {
+    display: block;
+    font-size: 9px;
+    font-style: italic;
+    opacity: 0.35;
+    padding: 3px 0;
+  }
+  /* BOM search input */
+  .bom-search {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    border: none;
+    border-top: 1px solid rgba(165,180,252,0.2);
+    border-bottom: 1px solid rgba(165,180,252,0.2);
+    color: #e0e7ff;
+    font-size: 11px;
+    padding: 5px 8px;
+    outline: none;
+    font-family: inherit;
+    flex-shrink: 0;
+    box-sizing: border-box;
+  }
+  .bom-search::placeholder { color: rgba(165,180,252,0.35); font-style: italic; }
+  /* Autocomplete dropdown — fixed, positioned by JS outside SVG */
+  #bom-ac {
+    position: fixed;
+    z-index: 9999;
+    display: none;
+    background: #1e1b4b;
+    border: 1px solid #6366f1;
+    border-radius: 8px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.65);
+    max-height: 190px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  #bom-ac .ac-item {
+    padding: 7px 12px;
+    font-size: 11px;
+    color: #c7d2fe;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(99,102,241,0.15);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #bom-ac .ac-item:last-child { border-bottom: none; }
+  #bom-ac .ac-item:hover { background: rgba(99,102,241,0.3); }
+  #bom-ac .ac-sku  { font-weight: 700; }
+  #bom-ac .ac-name { color: #818cf8; font-size: 10px; margin-left: 6px; }
+  #bom-ac .ac-empty { padding: 10px 12px; font-size: 11px; color: #475569; font-style: italic; }
+  /* Node color themes */
+  .ncard-user     { background:#1e1b4b; border:2.5px solid #6366f1; }
+  .ncard-user     .ncard-hdr { background:#160e45; color:#c7d2fe; }
+  .ncard-user     .ncard-row { color:#818cf8; }
+  .ncard-audit    { background:#1a2535; border:2px solid #475569; }
+  .ncard-audit    .ncard-hdr { background:#131c27; color:#94a3b8; }
+  .ncard-audit    .ncard-row { color:#64748b; }
+  .ncard-project  { background:#052e16; border:2.5px solid #22c55e; }
+  .ncard-project  .ncard-hdr { background:#032010; color:#4ade80; }
+  .ncard-project  .ncard-row { color:#16a34a; }
+  .ncard-product  { background:#431407; border:2.5px solid #f97316; }
+  .ncard-product  .ncard-hdr { background:#350f05; color:#fb923c; }
+  .ncard-product  .ncard-row { color:#c2410c; }
+  .ncard-bom      { background:#1a103d; border:3.5px solid #a5b4fc; box-shadow:0 0 18px rgba(99,102,241,0.45); }
+  .ncard-bom      .ncard-hdr { background:#130c32; color:#e0e7ff; }
+  .ncard-bom      .ncard-row { color:#818cf8; }
+  .ncard-revision { background:#130e36; border:2.5px solid #818cf8; }
+  .ncard-revision .ncard-hdr { background:#0e0a28; color:#a5b4fc; }
+  .ncard-revision .ncard-row { color:#6366f1; }
+  .ncard-cgt      { background:#042f2e; border:2px solid #14b8a6; }
+  .ncard-cgt      .ncard-hdr { background:#032220; color:#2dd4bf; }
+  .ncard-cgt      .ncard-row { color:#0d9488; }
+  .ncard-group    { background:#130e36; border:2.5px solid #6366f1; }
+  .ncard-group    .ncard-hdr { background:#0e0a28; color:#818cf8; }
+  .ncard-group    .ncard-row { color:#4f46e5; }
+  .ncard-bomitem  { background:#130e36; border:2.5px solid #4f46e5; }
+  .ncard-bomitem  .ncard-hdr { background:#0e0a28; color:#6366f1; }
+  .ncard-bomitem  .ncard-row { color:#4338ca; }
+  .ncard-comp     { background:#1c0a09; border:2.5px solid #f87171; }
+  .ncard-comp     .ncard-hdr { background:#160807; color:#fca5a5; }
+  .ncard-comp     .ncard-row { color:#ef4444; }
+  .ncard-erp      { background:#1c0a09; border:2px dashed #ef4444; }
+  .ncard-erp      .ncard-hdr { background:#160807; color:#f87171; }
+  .ncard-erp      .ncard-row { color:#dc2626; }
+
+  /* ── Auth overlay (shown when session is not active) ── */
+  #auth-overlay {
+    position: fixed; inset: 0;
+    background: rgba(7,12,24,0.9);
+    display: none; align-items: center; justify-content: center;
+    z-index: 99999;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+  }
+  #auth-overlay.visible { display: flex; }
+  #auth-overlay .ao-box {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 40px 52px;
+    text-align: center;
+    max-width: 440px;
+  }
+  #auth-overlay .ao-icon { font-size: 2.5rem; margin-bottom: 14px; }
+  #auth-overlay .ao-title { font-size: 1.1rem; font-weight: 700; color: #e2e8f0; margin-bottom: 8px; }
+  #auth-overlay .ao-msg { font-size: 0.875rem; color: #64748b; line-height: 1.55; margin-bottom: 26px; }
+  #auth-overlay .ao-btn {
+    display: inline-block; padding: 10px 30px;
+    background: #4f46e5; color: #e0e7ff;
+    border-radius: 8px; font-size: 0.875rem; font-weight: 600;
+    text-decoration: none; transition: background 0.15s;
+  }
+  #auth-overlay .ao-btn:hover { background: #6366f1; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span>Bommer</span> — Entity Relationship Map</h1>
+  <p>Visual overview of every entity and how it connects to the others</p>
+</header>
+
+<div class="card">
+
+  <!-- Zoom controls -->
+  <div class="zoom-controls">
+    <button id="btn-zoom-in"  title="Zoom in">+</button>
+    <button id="btn-zoom-out" title="Zoom out">−</button>
+    <button id="btn-zoom-reset" title="Reset view" style="font-size:0.65rem;letter-spacing:-0.5px;">FIT</button>
+    <div class="zoom-level" id="zoom-label">100%</div>
+  </div>
+  <div class="zoom-hint">scroll to zoom &nbsp;·&nbsp; drag to pan</div>
+
+<svg id="diagram-svg" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <!-- Arrow markers -->
+  <marker id="a-slate"  markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#64748b"/></marker>
+  <marker id="a-indigo" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#818cf8"/></marker>
+  <marker id="a-green"  markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#4ade80"/></marker>
+  <marker id="a-orange" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#fb923c"/></marker>
+  <marker id="a-teal"   markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#2dd4bf"/></marker>
+  <marker id="a-red"    markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#f87171"/></marker>
+  <!-- Glow / shadow -->
+  <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+    <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000" flood-opacity="0.55"/>
+  </filter>
+  <filter id="glow-indigo" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#6366f1" flood-opacity="0.5"/>
+  </filter>
+  <!-- Subtle row bands -->
+  <linearGradient id="band1" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#1e293b" stop-opacity="0.18"/>
+    <stop offset="100%" stop-color="#1e293b" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="band2" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#1e293b" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#1e293b" stop-opacity="0.18"/>
+  </linearGradient>
+</defs>
+<g id="canvas">
+
+<!-- ─── BACKGROUND ROW BANDS ─────────────────────────────────────── -->
+<rect x="0" y="140" width="1960" height="155" fill="url(#band1)" opacity="0.5"/>
+<rect x="0" y="352" width="1960" height="155" fill="url(#band2)" opacity="0.5"/>
+
+<!-- Row labels (far left) -->
+<text x="14" y="220" font-size="9" fill="#1e3a5f" font-weight="700" letter-spacing="1.5" transform="rotate(-90,14,220)">TOP LEVEL</text>
+<text x="14" y="440" font-size="9" fill="#1e3a5f" font-weight="700" letter-spacing="1.5" transform="rotate(-90,14,440)">CATALOG</text>
+
+<!-- ─── RELATIONSHIP LINES (drawn behind nodes) ─────────────────── -->
+
+<!-- ① USER → AUDIT LOG (straight down) -->
+<line x1="185" y1="285" x2="185" y2="362" stroke="#475569" stroke-width="1.5" marker-end="url(#a-slate)"/>
+<text x="154" y="327" font-size="10" fill="#475569" text-anchor="middle" transform="rotate(-90,154,327)">every action logged</text>
+
+<!-- ② USER → PROJECT (right) -->
+<line x1="277" y1="220" x2="413" y2="220" stroke="#818cf8" stroke-width="2.5" marker-end="url(#a-indigo)"/>
+<text x="345" y="212" font-size="10" fill="#818cf8" text-anchor="middle">creates / owns</text>
+
+<!-- ③ USER → BOM (arc above) -->
+<path d="M277,210 C430,115 680,115 728,215" stroke="#818cf8" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#a-indigo)"/>
+<text x="503" y="108" font-size="10" fill="#818cf8" text-anchor="middle">creates</text>
+
+<!-- ④ USER → PRODUCT (diagonal dashed) -->
+<path d="M247,248 L413,425" stroke="#818cf8" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#a-indigo)"/>
+<text x="305" y="350" font-size="9" fill="#6366f1" text-anchor="middle" transform="rotate(-44,305,350)">creates</text>
+
+<!-- ⑤ PROJECT → PRODUCT (down) -->
+<line x1="493" y1="285" x2="493" y2="362" stroke="#4ade80" stroke-width="2.5" marker-end="url(#a-green)"/>
+<!-- PRODUCT → PROJECT (up, reverse) -->
+<line x1="519" y1="362" x2="519" y2="285" stroke="#fb923c" stroke-width="2.5" marker-end="url(#a-orange)"/>
+<text x="565" y="317" font-size="10" fill="#4ade80" text-anchor="start">M : M</text>
+<text x="565" y="331" font-size="10" fill="#4ade80" text-anchor="start">product_projects</text>
+
+<!-- ⑥ PROJECT self-loop: optional variants -->
+<path d="M598,185 C665,108 722,108 612,187" stroke="#4ade80" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#a-green)"/>
+<text x="662" y="118" font-size="10" fill="#4ade80">optional variants</text>
+<text x="662" y="132" font-size="10" fill="#4ade80">(project_optionals)</text>
+
+<!-- ⑦ PROJECT → BOM (right) -->
+<line x1="597" y1="220" x2="728" y2="220" stroke="#4ade80" stroke-width="2.5" marker-end="url(#a-green)"/>
+<text x="662" y="211" font-size="10" fill="#4ade80" text-anchor="middle">1 : M</text>
+
+<!-- ⑧ PRODUCT → BOM (diagonal dashed — specific assignment) -->
+<path d="M597,425 C668,360 700,270 728,225" stroke="#fb923c" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#a-orange)"/>
+<text x="700" y="355" font-size="10" fill="#fb923c" text-anchor="start">M:M specific</text>
+<text x="700" y="369" font-size="10" fill="#fb923c" text-anchor="start">(product_boms)</text>
+
+<!-- ⑨ BOM → BOM REVISION -->
+<line x1="918" y1="220" x2="1053" y2="220" stroke="#818cf8" stroke-width="3" marker-end="url(#a-indigo)"/>
+<text x="985" y="211" font-size="10" fill="#818cf8" text-anchor="middle">1 : M</text>
+
+<!-- ⑩ BOM REVISION → BOM GROUP -->
+<line x1="1237" y1="220" x2="1373" y2="220" stroke="#818cf8" stroke-width="2.5" marker-end="url(#a-indigo)"/>
+<text x="1305" y="211" font-size="10" fill="#818cf8" text-anchor="middle">1 : M</text>
+
+<!-- ⑪ BOM GROUP → BOM ITEM (down) -->
+<line x1="1465" y1="285" x2="1465" y2="362" stroke="#818cf8" stroke-width="2.5" marker-end="url(#a-indigo)"/>
+<text x="1495" y="325" font-size="10" fill="#818cf8">1 : M</text>
+
+<!-- ⑫ COMP GROUP TEMPLATE → BOM GROUP (dashed teal, diagonal) -->
+<path d="M1237,430 C1320,378 1370,296 1396,250" stroke="#2dd4bf" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#a-teal)"/>
+<text x="1278" y="344" font-size="10" fill="#2dd4bf" text-anchor="middle">template</text>
+<text x="1278" y="358" font-size="10" fill="#2dd4bf" text-anchor="middle">reference</text>
+
+<!-- ⑬ BOM ITEM → COMPONENT (diagonal up-right) -->
+<line x1="1557" y1="420" x2="1704" y2="225" stroke="#f87171" stroke-width="2" marker-end="url(#a-red)"/>
+<text x="1660" y="305" font-size="10" fill="#f87171" text-anchor="start">M : 1</text>
+<text x="1660" y="319" font-size="10" fill="#f87171" text-anchor="start">source = bommer</text>
+
+<!-- ⑭ BOM ITEM → ERP COMPONENT (right) -->
+<line x1="1557" y1="433" x2="1704" y2="433" stroke="#f87171" stroke-width="2" marker-end="url(#a-red)"/>
+<text x="1630" y="424" font-size="10" fill="#f87171" text-anchor="middle">M : 1  source = erp</text>
+
+<!-- ─── ENTITY NODES (foreignObject + HTML cards) ─────────────────── -->
+
+<!-- USER -->
+<foreignObject x="93" y="155" width="184" height="130">
+  <div xmlns="http://www.w3.org/1999/xhtml" class="ncard ncard-user">
+    <div class="ncard-hdr">👤 USER</div>
+    <div class="ncard-body" id="nd-user"><span class="ncard-empty">— select a BOM —</span></div>
+  </div>
+</foreignObject>
+
+<!-- AUDIT LOG -->
+<foreignObject x="93" y="362" width="184" height="130">
+  <div xmlns="http://www.w3.org/1999/xhtml" class="ncard ncard-audit">
+    <div class="ncard-hdr">📋 AUDIT LOG</div>
+    <div class="ncard-body" id="nd-audit"><span class="ncard-empty">— select a BOM —</span></div>
+  </div>
+</foreignObject>
+
+<!-- PROJECT -->
+<foreignObject x="413" y="155" width="184" height="130">
+  <div xmlns="http://www.w3.org/1999/xhtml" class="ncard ncard-project">
+    <div class="ncard-hdr">📁 PROJECT</div>
+    <div class="ncard-body" id="nd-project"><span class="ncard-empty">— select a BOM —</span></div>
+  </div>
+</foreignObject>
+
+<!-- PRODUCT -->
+<foreignObject x="413" y="362" width="184" height="130">
+  <div xmlns="http://www.w3.org/1999/xhtml" class="ncard ncard-product">
+    <div class="ncard-hdr">📦 PRODUCT</div>
+    <div class="ncard-body" id="nd-product"><span class="ncard-empty">— select a BOM —</span></div>
+  </div>
+</foreignObject>
+
+<!-- BOM (core — taller, with search) -->
+<foreignObject id="fo-bom" x="728" y="145" width="190" height="160">
+  <div xmlns="http://www.w3.org/1999/xhtml" class="ncard ncard-bom">
+    <div class="ncard-hdr">📄 BOM — CORE</div>
+    <input id="bom-search" class="bom-search" type="text" placeholder="Search SKU or name…" autocomplete="off"/>
+    <div class="ncard-body" id="nd-bom"><span class="ncard-empty">type to search a BOM</span></div>
+  </div>
+</foreignObject>
+
+<!-- BOM REVISION -->
+<foreignObject x="1053" y="155" width="184" height="130">
+  <div xmlns="http://www.w3.org/1999/xhtml" class="ncard ncard-revision">
+    <div class="ncard-hdr">🔄 BOM REVISION</div>
+    <div class="ncard-body" id="nd-revision"><span class="ncard-empty">— select a BOM —</span></div>
+  </div>
+</foreignObject>
+
+<!-- COMP GROUP TEMPLATE -->
+<foreignObject x="1053" y="362" width="184" height="130">
+  <div xmlns="http://www.w3.org/1999/xhtml" class="ncard ncard-cgt">
+    <div class="ncard-hdr">🗂 GROUP TEMPLATES</div>
+    <div class="ncard-body" id="nd-cgt"><span class="ncard-empty">loading…</span></div>
+  </div>
+</foreignObject>
+
+<!-- BOM GROUP -->
+<foreignObject x="1373" y="155" width="184" height="130">
+  <div xmlns="http://www.w3.org/1999/xhtml" class="ncard ncard-group">
+    <div class="ncard-hdr">🗃 BOM GROUP</div>
+    <div class="ncard-body" id="nd-group"><span class="ncard-empty">— select a BOM —</span></div>
+  </div>
+</foreignObject>
+
+<!-- BOM ITEM -->
+<foreignObject x="1373" y="362" width="184" height="130">
+  <div xmlns="http://www.w3.org/1999/xhtml" class="ncard ncard-bomitem">
+    <div class="ncard-hdr">📌 BOM ITEM</div>
+    <div class="ncard-body" id="nd-bomitem"><span class="ncard-empty">— select a BOM —</span></div>
+  </div>
+</foreignObject>
+
+<!-- COMPONENT (bommer) -->
+<foreignObject x="1704" y="155" width="210" height="130">
+  <div xmlns="http://www.w3.org/1999/xhtml" class="ncard ncard-comp">
+    <div class="ncard-hdr">🔩 COMPONENT</div>
+    <div class="ncard-body" id="nd-comp"><span class="ncard-empty">— select a BOM —</span></div>
+  </div>
+</foreignObject>
+
+<!-- ERP COMPONENT -->
+<foreignObject x="1704" y="362" width="210" height="130">
+  <div xmlns="http://www.w3.org/1999/xhtml" class="ncard ncard-erp">
+    <div class="ncard-hdr">🏭 ERP COMPONENT</div>
+    <div class="ncard-body" id="nd-erp"><span class="ncard-empty">— select a BOM —</span></div>
+  </div>
+</foreignObject>
+
+<!-- ─── FLOW LABELS ─────────────────────────────────────────────── -->
+<text x="980" y="530" font-size="10" fill="#64748b" text-anchor="middle" letter-spacing="0.5">
+  USER  →  PROJECT  →  BOM  →  BOM REVISION  →  BOM GROUP  →  BOM ITEM  →  COMPONENT
+</text>
+<text x="980" y="545" font-size="9" fill="#475569" text-anchor="middle">
+  Search a BOM in the core node · all connected entities populate automatically · click any item to open it in the app
+</text>
+
+</g><!-- #canvas -->
+</svg>
+
+<!-- ─── LEGEND ─────────────────────────────────────────────────── -->
+<div class="legend">
+  <div class="li"><div class="lb" style="background:#6366f1;border:1px solid #818cf8"></div>Auth / User</div>
+  <div class="li"><div class="lb" style="background:#22c55e;border:1px solid #4ade80"></div>Project</div>
+  <div class="li"><div class="lb" style="background:#f97316;border:1px solid #fb923c"></div>Product</div>
+  <div class="li"><div class="lb" style="background:#a5b4fc;border:1px solid #e0e7ff"></div>BOM (core)</div>
+  <div class="li"><div class="lb" style="background:#818cf8;border:1px solid #a5b4fc"></div>BOM Structure</div>
+  <div class="li"><div class="lb" style="background:#14b8a6;border:1px solid #2dd4bf"></div>Group Templates</div>
+  <div class="li"><div class="lb" style="background:#f87171;border:1px solid #fca5a5"></div>Components (parts)</div>
+  <div class="li"><div class="lb" style="background:#475569;border:1px solid #64748b"></div>System / Audit</div>
+  <span class="sep">|</span>
+  <div class="note">── solid arrow = mandatory FK &nbsp;&nbsp; - - - dashed = optional / logical link &nbsp;&nbsp; ⬡ dashed border = external system</div>
+</div>
+
+</div><!-- .card -->
+
+<!-- Autocomplete dropdown — positioned outside SVG to allow overflow -->
+<div id="bom-ac"></div>
+
+<!-- Auth overlay — shown when no active session -->
+<div id="auth-overlay">
+  <div class="ao-box">
+    <div class="ao-icon">🔒</div>
+    <div class="ao-title">Session not active</div>
+    <div class="ao-msg">Please log in to the Bommer app first.<br>This explorer requires an active session to load data.</div>
+    <a class="ao-btn" href="/app.php">Open App →</a>
+  </div>
+</div>
+
+<script>
+// ── BOM Explorer Data Layer ──────────────────────────────────────────────────
+(function () {
+  const BASE = '/api/stats.php';
+  let currentBomId = null;
+
+  // ── Auth overlay ─────────────────────────────────────────────────────────────
+  const authOverlay = document.getElementById('auth-overlay');
+  function showAuthOverlay() { authOverlay.classList.add('visible'); }
+
+  // Central fetch wrapper — shows overlay on 401
+  async function apiFetch(url) {
+    const res = await fetch(url);
+    if (res.status === 401) { showAuthOverlay(); throw new Error('unauthenticated'); }
+    return res;
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  function setEl(id, html) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+      .replace(/'/g,'&#39;');
+  }
+
+  function row(label, route) {
+    if (route) {
+      return `<a class="ncard-row" href="#" onclick="openInApp('${esc(route)}');return false;">${esc(label)}</a>`;
+    }
+    return `<span class="ncard-row">${esc(label)}</span>`;
+  }
+
+  function empty(msg) {
+    return `<span class="ncard-empty">${esc(msg)}</span>`;
+  }
+
+  // ── Autocomplete dropdown ────────────────────────────────────────────────────
+  const ac = document.getElementById('bom-ac');
+
+  function positionAc() {
+    const input = document.getElementById('bom-search');
+    if (!input) return;
+    const r = input.getBoundingClientRect();
+    ac.style.left  = r.left  + 'px';
+    ac.style.top   = (r.bottom + 3) + 'px';
+    ac.style.width = r.width + 'px';
+  }
+
+  function showAc(html) { positionAc(); ac.innerHTML = html; ac.style.display = 'block'; }
+  function hideAc()     { ac.style.display = 'none'; ac.innerHTML = ''; }
+
+  // Delegated click on dropdown — avoids inline JS and quote-escaping issues
+  ac.addEventListener('click', function (e) {
+    const item = e.target.closest('.ac-item');
+    if (!item) return;
+    window.__selectBom(parseInt(item.dataset.id, 10), item.dataset.sku);
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!ac.contains(e.target) && e.target.id !== 'bom-search') hideAc();
+  });
+
+  // ── Search input (event delegation — input is inside foreignObject) ──────────
+  let searchTimer = null;
+
+  document.addEventListener('input', function (e) {
+    if (e.target.id !== 'bom-search') return;
+    clearTimeout(searchTimer);
+    const q = e.target.value.trim();
+    if (q.length < 2) { hideAc(); return; }
+    searchTimer = setTimeout(() => fetchSearch(q), 280);
+  });
+
+  document.addEventListener('focus', function (e) {
+    if (e.target.id !== 'bom-search') return;
+    const q = e.target.value.trim();
+    if (q.length >= 2) fetchSearch(q);
+  }, true);
+
+  // ── BOM search ───────────────────────────────────────────────────────────────
+  async function fetchSearch(q) {
+    try {
+      const res  = await apiFetch(`${BASE}?action=bom_search&q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        showAc('<div class="ac-empty">No BOMs found</div>');
+        return;
+      }
+      const html = data.map(b =>
+        `<div class="ac-item" data-id="${b.id}" data-sku="${esc(b.sku)}">
+           <span class="ac-sku">${esc(b.sku)}</span>
+           <span class="ac-name">${esc(b.name)}</span>
+         </div>`
+      ).join('');
+      showAc(html);
+    } catch (err) {
+      console.warn('BOM search error', err);
+    }
+  }
+
+  // ── Select BOM ───────────────────────────────────────────────────────────────
+  window.__selectBom = async function (id, sku) {
+    hideAc();
+    currentBomId = id;
+    const input = document.getElementById('bom-search');
+    if (input) input.value = sku;
+
+    const loadingMsg = '<span class="ncard-empty">loading\u2026</span>';
+    ['nd-bom','nd-project','nd-product','nd-revision',
+     'nd-group','nd-bomitem','nd-comp','nd-erp','nd-user','nd-audit']
+      .forEach(nid => setEl(nid, loadingMsg));
+
+    try {
+      const res = await apiFetch(`${BASE}?action=bom_context&bom_id=${id}`);
+      const ctx = await res.json();
+      if (ctx.error) {
+        setEl('nd-bom', `<span class="ncard-empty" style="color:#f87171">${esc(ctx.error)}</span>`);
+        return;
+      }
+      renderAll(ctx);
+    } catch (err) {
+      setEl('nd-bom', `<span class="ncard-empty" style="color:#f87171">Network error</span>`);
+      console.warn('BOM context error', err);
+    }
+  };
+
+  // ── Render all nodes ─────────────────────────────────────────────────────────
+  function renderAll(ctx) {
+    const bom = ctx.bom;
+
+    // BOM node
+    const varTag = bom.variant_group ? ` [${bom.variant_group}]` : '';
+    setEl('nd-bom',
+      row(`${bom.sku}${varTag}`, `boms/${bom.id}`) +
+      `<span class="ncard-row" style="font-size:9px;opacity:0.6">${esc(bom.name)}</span>` +
+      `<span class="ncard-row" style="color:#4338ca;font-size:9px">Rev ${bom.current_revision}</span>`
+    );
+
+    // PROJECT
+    if (ctx.project) {
+      const p = ctx.project;
+      setEl('nd-project',
+        row(`${p.code} \u00b7 ${p.name}`, `projects/${p.id}`) +
+        `<span class="ncard-row" style="font-size:9px;opacity:0.5">${esc(p.status)}</span>`
+      );
+    } else {
+      setEl('nd-project', empty('no project linked'));
+    }
+
+    // PRODUCTS
+    if (ctx.products && ctx.products.length > 0) {
+      setEl('nd-product', ctx.products.map(p => row(`${p.code} \u00b7 ${p.name}`, 'products')).join(''));
+    } else {
+      setEl('nd-product', empty('no products linked'));
+    }
+
+    // BOM REVISIONS
+    if (ctx.revisions && ctx.revisions.length > 0) {
+      setEl('nd-revision', ctx.revisions.map(r => {
+        const cur = r.revision_number === bom.current_revision;
+        return row(`Rev ${r.revision_number} \u2014 ${r.status}${cur ? ' \u2605' : ''}`, `boms/${bom.id}`);
+      }).join(''));
+    } else {
+      setEl('nd-revision', empty('no revisions'));
+    }
+
+    // BOM GROUPS
+    if (ctx.groups && ctx.groups.length > 0) {
+      setEl('nd-group', ctx.groups.map(g =>
+        row(`${g.name} (${g.item_count})`, null)
+      ).join(''));
+    } else {
+      setEl('nd-group', empty('no groups'));
+    }
+
+    // BOM ITEMS summary
+    const items = ctx.items;
+    if (items && items.count > 0) {
+      setEl('nd-bomitem',
+        row(`${items.count} line item${items.count !== 1 ? 's' : ''}`, null) +
+        `<span class="ncard-row" style="font-size:9px;opacity:0.7">Total: $${items.total_cost.toFixed(2)}</span>`
+      );
+    } else {
+      setEl('nd-bomitem', empty('no items'));
+    }
+
+    // COMPONENTS (bommer)
+    if (ctx.components && ctx.components.length > 0) {
+      const more = ctx.components.length >= 20 ? empty('\u2026and more') : '';
+      setEl('nd-comp', ctx.components.map(c => row(c.part_number, 'components')).join('') + more);
+    } else {
+      setEl('nd-comp', empty('none (bommer source)'));
+    }
+
+    // ERP COMPONENTS
+    if (ctx.erp_components && ctx.erp_components.length > 0) {
+      const more = ctx.erp_components.length >= 20 ? empty('\u2026and more') : '';
+      setEl('nd-erp',
+        ctx.erp_components.map(c => row(c.part_number, 'components?source=erp')).join('') + more
+      );
+    } else {
+      setEl('nd-erp', empty('none (erp source)'));
+    }
+
+    // USER (created_by)
+    setEl('nd-user', ctx.created_by ? row(ctx.created_by.full_name, null) : empty('unknown'));
+
+    // AUDIT LOG
+    if (ctx.recent_audit && ctx.recent_audit.length > 0) {
+      setEl('nd-audit', ctx.recent_audit.map(a =>
+        row(`${a.action} \u00b7 ${a.created_at}`, null)
+      ).join(''));
+    } else {
+      setEl('nd-audit', empty('no audit events'));
+    }
+  }
+
+  // ── Navigation helper ────────────────────────────────────────────────────────
+  window.openInApp = function (route) {
+    window.open(`/app.php#${route}`, '_blank');
+  };
+
+  // ── Load Group Templates independently (static catalog) ─────────────────────
+  fetch('/api/component-groups.php')
+    .then(r => {
+      if (r.status === 401) { showAuthOverlay(); throw new Error('unauthenticated'); }
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    })
+    .then(data => {
+      const groups = (data.data || []).filter(g => g.is_active);
+      if (groups.length > 0) {
+        setEl('nd-cgt', groups.map(g =>
+          `<span class="ncard-row">${esc(g.name)}</span>`
+        ).join(''));
+      } else {
+        setEl('nd-cgt', empty('no active templates'));
+      }
+    })
+    .catch(() => setEl('nd-cgt', empty('could not load')));
+
+})();
+</script>
+
+<script>
+// ── Pan / Zoom ────────────────────────────────────────────────────────────────
+(function () {
+  const svg    = document.getElementById('diagram-svg');
+  const canvas = document.getElementById('canvas');
+  const label  = document.getElementById('zoom-label');
+
+  // Diagram natural dimensions
+  const DW = 1960, DH = 580;
+
+  // Transform state
+  let tx = 0, ty = 0, scale = 1;
+
+  // ── Apply transform ──────────────────────────────────────────────
+  function applyTransform() {
+    canvas.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`);
+    label.textContent = Math.round(scale * 100) + '%';
+  }
+
+  // ── Fit-to-view (initial & reset) ───────────────────────────────
+  function fitView() {
+    const rect = svg.getBoundingClientRect();
+    const padding = 40;
+    scale = Math.min(
+      (rect.width  - padding * 2) / DW,
+      (rect.height - padding * 2) / DH
+    );
+    tx = (rect.width  - DW * scale) / 2;
+    ty = (rect.height - DH * scale) / 2;
+    applyTransform();
+  }
+
+  // Run fit after layout settles
+  requestAnimationFrame(() => requestAnimationFrame(fitView));
+  window.addEventListener('resize', fitView);
+
+  // ── Zoom towards a point ─────────────────────────────────────────
+  const MIN_SCALE = 0.15, MAX_SCALE = 6;
+
+  function zoomAt(cx, cy, factor) {
+    const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * factor));
+    // cx, cy are in SVG element pixel coords
+    tx = cx - (cx - tx) * (newScale / scale);
+    ty = cy - (cy - ty) * (newScale / scale);
+    scale = newScale;
+    applyTransform();
+  }
+
+  // ── Mouse wheel zoom ─────────────────────────────────────────────
+  svg.addEventListener('wheel', function (e) {
+    // If the cursor is over a scrollable node body, scroll it instead of zooming
+    const nodeBody = e.target.closest && e.target.closest('.ncard-body');
+    if (nodeBody) {
+      nodeBody.scrollTop += e.deltaY;
+      e.preventDefault();
+      return;
+    }
+    e.preventDefault();
+    const rect   = svg.getBoundingClientRect();
+    const cx     = e.clientX - rect.left;
+    const cy     = e.clientY - rect.top;
+    const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+    zoomAt(cx, cy, factor);
+  }, { passive: false });
+
+  // ── Drag to pan ──────────────────────────────────────────────────
+  let dragging = false, dragStartX = 0, dragStartY = 0, txStart = 0, tyStart = 0;
+
+  svg.addEventListener('mousedown', function (e) {
+    if (e.button !== 0) return;
+    // Don't start drag when clicking inside a node card (inputs, links, scrollable content)
+    if (e.target.closest && e.target.closest('.ncard')) return;
+    dragging  = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    txStart   = tx;
+    tyStart   = ty;
+    svg.classList.add('dragging');
+    e.preventDefault();
+  });
+
+  window.addEventListener('mousemove', function (e) {
+    if (!dragging) return;
+    tx = txStart + (e.clientX - dragStartX);
+    ty = tyStart + (e.clientY - dragStartY);
+    applyTransform();
+  });
+
+  window.addEventListener('mouseup', function () {
+    if (!dragging) return;
+    dragging = false;
+    svg.classList.remove('dragging');
+  });
+
+  // ── Touch support ────────────────────────────────────────────────
+  let lastTouchDist = null, touchTx = 0, touchTy = 0;
+
+  svg.addEventListener('touchstart', function (e) {
+    if (e.touches.length === 1) {
+      dragging   = true;
+      dragStartX = e.touches[0].clientX;
+      dragStartY = e.touches[0].clientY;
+      txStart    = tx; tyStart = ty;
+    } else if (e.touches.length === 2) {
+      dragging = false;
+      lastTouchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }
+    e.preventDefault();
+  }, { passive: false });
+
+  svg.addEventListener('touchmove', function (e) {
+    if (e.touches.length === 1 && dragging) {
+      tx = txStart + (e.touches[0].clientX - dragStartX);
+      ty = tyStart + (e.touches[0].clientY - dragStartY);
+      applyTransform();
+    } else if (e.touches.length === 2 && lastTouchDist !== null) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const rect = svg.getBoundingClientRect();
+      const cx   = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left;
+      const cy   = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
+      zoomAt(cx, cy, dist / lastTouchDist);
+      lastTouchDist = dist;
+    }
+    e.preventDefault();
+  }, { passive: false });
+
+  svg.addEventListener('touchend', function () {
+    dragging = false; lastTouchDist = null;
+  });
+
+  // ── Button controls ──────────────────────────────────────────────
+  document.getElementById('btn-zoom-in').addEventListener('click', function () {
+    const rect = svg.getBoundingClientRect();
+    zoomAt(rect.width / 2, rect.height / 2, 1.25);
+  });
+  document.getElementById('btn-zoom-out').addEventListener('click', function () {
+    const rect = svg.getBoundingClientRect();
+    zoomAt(rect.width / 2, rect.height / 2, 1 / 1.25);
+  });
+  document.getElementById('btn-zoom-reset').addEventListener('click', fitView);
+})();
+</script>
+
+</body>
+</html>

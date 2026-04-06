@@ -32,9 +32,9 @@ CREATE TABLE IF NOT EXISTS projects (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
--- ASSEMBLIES
+-- PRODUCTS
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS assemblies (
+CREATE TABLE IF NOT EXISTS products (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     code VARCHAR(50) NOT NULL UNIQUE,
     name VARCHAR(200) NOT NULL,
@@ -49,19 +49,35 @@ CREATE TABLE IF NOT EXISTS assemblies (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
--- ASSEMBLY_PROJECTS (Many-to-Many)
+-- PRODUCT_PROJECTS (Many-to-Many)
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS assembly_projects (
-    assembly_id INT UNSIGNED NOT NULL,
+CREATE TABLE IF NOT EXISTS product_projects (
+    product_id INT UNSIGNED NOT NULL,
     project_id INT UNSIGNED NOT NULL,
     added_by INT UNSIGNED NOT NULL,
     added_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (assembly_id, project_id),
-    FOREIGN KEY (assembly_id) REFERENCES assemblies(id) ON DELETE CASCADE,
+    PRIMARY KEY (product_id, project_id),
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
     FOREIGN KEY (added_by) REFERENCES users(id),
-    INDEX idx_assembly (assembly_id),
+    INDEX idx_product (product_id),
     INDEX idx_project (project_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- PRODUCT_BOMS (Direct BOM assignments to Products)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS product_boms (
+    product_id INT UNSIGNED NOT NULL,
+    bom_id INT UNSIGNED NOT NULL,
+    added_by INT UNSIGNED NOT NULL,
+    added_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (product_id, bom_id),
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    FOREIGN KEY (bom_id) REFERENCES boms(id) ON DELETE CASCADE,
+    FOREIGN KEY (added_by) REFERENCES users(id),
+    INDEX idx_product (product_id),
+    INDEX idx_bom (bom_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
@@ -198,7 +214,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id INT UNSIGNED NOT NULL,
     action VARCHAR(100) NOT NULL,
-    entity_type ENUM('bom', 'project', 'assembly', 'component', 'user') NOT NULL,
+    entity_type ENUM('bom', 'project', 'product', 'component', 'user') NOT NULL,
     entity_id INT UNSIGNED NOT NULL,
     details JSON,
     ip_address VARCHAR(45),
@@ -222,19 +238,19 @@ INSERT INTO projects (code, name, description, status, priority, owner_id, creat
 ('PRJ-003', 'Gamma Enhancement', 'Enhanced gamma features', 'planning', 'low', 1, 1)
 ON DUPLICATE KEY UPDATE id=id;
 
--- Insert sample assemblies
-INSERT INTO assemblies (code, name, description, category, created_by) VALUES
-('ASM-001', 'Main Board Assembly', 'Primary circuit board assembly', 'Electronics', 1),
-('ASM-002', 'Power Supply Assembly', 'Power delivery system', 'Power', 1),
-('ASM-003', 'Enclosure Assembly', 'Mechanical housing', 'Mechanical', 1)
+-- Insert sample products
+INSERT INTO products (code, name, description, category, created_by) VALUES
+('PRD-001', 'Main Board Product', 'Primary circuit board product', 'Electronics', 1),
+('PRD-002', 'Power Supply Product', 'Power delivery system', 'Power', 1),
+('PRD-003', 'Enclosure Product', 'Mechanical housing', 'Mechanical', 1)
 ON DUPLICATE KEY UPDATE id=id;
 
--- Link projects to assemblies
-INSERT INTO assembly_projects (assembly_id, project_id, added_by) VALUES
+-- Link projects to products
+INSERT INTO product_projects (product_id, project_id, added_by) VALUES
 (1, 1, 1),
 (1, 2, 1),
 (2, 1, 1)
-ON DUPLICATE KEY UPDATE assembly_id=assembly_id;
+ON DUPLICATE KEY UPDATE product_id=product_id;
 
 -- Insert sample components
 INSERT INTO components (part_number, name, description, category, manufacturer, mpn, supplier, unit_cost, stock_level, min_stock, lead_time_days, status, created_by) VALUES
